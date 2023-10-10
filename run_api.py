@@ -52,7 +52,7 @@ def run_re(output_dir, few_shot = True):
         )
         response = completions.choices[0]['message']['content']
         
-        output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.txt')
+        output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(response)
 
