@@ -45,6 +45,9 @@ def generate_input_data(input_dir, output_dir):
         shutil.copy(xml_file, os.path.join(output_dir, 'data/nerre'))
 
     ### Generate RE input data
+    train_files = glob.glob(os.path.join(input_dir, 'train/*.xml'))
+    test_files = glob.glob(os.path.join(input_dir, 'test/*.xml'))
+    xml_files = train_files + test_files
     for xml_file in td.tqdm(xml_files, desc="Generaing RE input data", unit="file"):
         with open(xml_file, 'rb') as f:
             rawdata = f.read()
@@ -81,7 +84,7 @@ def generate_input_data(input_dir, output_dir):
             offset += len(closer)
             
         # Write the converted data to the output directory
-        output_file = os.path.join(os.path.join(output_dir, 'data/re'), os.path.splitext(os.path.basename(xml_file))[0] + '.xml')
+        output_file = os.path.join(os.path.join(output_dir, 'data/re'), os.path.splitext(os.path.basename(xml_file))[0] + '.txt')
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(converted_text)
 
@@ -258,10 +261,3 @@ def generate_eval_data(input_dir, output_dir):
         output_file = os.path.join(os.path.join(output_dir, 'eval/nerre'), os.path.splitext(os.path.basename(xml_file))[0] + '.xml')
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(reparsed)
-            
-            
-input_dir = "/phi_home/jp4453/Temporal-Phenotype/i2b2-2012-original"
-output_dir = "/phi_home/jp4453/Temporal-Phenotype/result"
-
-generate_input_data(input_dir, output_dir)
-generate_eval_data(input_dir, output_dir)
