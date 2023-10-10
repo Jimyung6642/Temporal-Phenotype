@@ -1,7 +1,6 @@
 # data
-i2b2-2012-converted/*
 i2b2-2012-original/*
-i2b2-2012-converted/*
+result/*
 api.config
 
 # Byte-compiled / optimized / DLL files
