@@ -4,6 +4,7 @@ import configparser
 import tqdm as td
 import os, glob, chardet
 from datetime import date
+import re
 
 
 def run_ner(input_dir, output_dir, few_shot = True):
@@ -51,6 +52,11 @@ def run_re(output_dir, few_shot = True):
             ]
         )
         response = completions.choices[0]['message']['content']
+        # Add XML tags. May need to consider processing only the last TLINK sentence.
+        if re.search(r'"\s?/>$', response[-25:]):
+            response = '<TAGS>\n' + response + '\n<TAGS>'
+        else: 
+            response = '<TAGS>\n' + response + '" />' + '\n<TAGS>'
         
         output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
         with open(output_file, 'w', encoding='utf-8') as f:
