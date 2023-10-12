@@ -96,9 +96,9 @@ def eval_re(output_dir, execute_date = None):
     micro_recall = TP / (TP + FN) if TP + FN != 0 else 0
     micro_f1 = (2 * micro_precision * micro_recall) / (micro_precision + micro_recall) if micro_precision + micro_recall != 0 else 0
 
-    print("Micro-Precision:", micro_precision)
-    print("Micro-Recall:", micro_recall)
-    print("Micro-F1:", micro_f1)
+    # print("Micro-Precision:", micro_precision)
+    # print("Micro-Recall:", micro_recall)
+    # print("Micro-F1:", micro_f1)
 
     # For macro-average, we need to calculate metrics for each 'type' and then average them
     types = df_original['type'].unique().tolist() + df_output['type'].unique().tolist()
@@ -123,9 +123,11 @@ def eval_re(output_dir, execute_date = None):
     macro_recall = sum(macro_recall_list) / len(macro_recall_list)
     macro_f1 = sum(macro_f1_list) / len(macro_f1_list)
 
-    print("\nMacro-Precision:", macro_precision)
-    print("Macro-Recall:", macro_recall)
-    print("Macro-F1:", macro_f1)
+    # print("\nMacro-Precision:", macro_precision)
+    # print("Macro-Recall:", macro_recall)
+    # print("Macro-F1:", macro_f1)
 
+    return micro_precision, micro_recall, micro_f1, macro_precision, macro_recall, macro_f1
+    
 def eval_nerre():
     pass
