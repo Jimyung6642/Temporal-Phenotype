@@ -49,6 +49,9 @@ if __name__ == "__main__":
         logger.info('Evaluate tRE output')
         micro_precision, micro_recall, micro_f1, macro_precision, macro_recall, macro_f1 = eval_re(output_dir, execute_date = None)
         
+        # Neeed to be implemented
+        # Standardize extracted temporal related concepts
+        
         logger.info(f'macro precision: {macro_precision}')
         logger.info(f'macro recall: {macro_recall}')
         logger.info(f'macro f1: {macro_f1}')

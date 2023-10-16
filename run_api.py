@@ -41,19 +41,23 @@ def run_re(output_dir, few_shot = True):
             with open(note, 'r') as f:
                 context = f.read()
             
-            # GPT API call
-            completions = openai.ChatCompletion.create(
-                model = model,
-                temperature = temp,
-                n = 1,
-                messages = [
-                    {'role':'system', 'content':system_msg},
-                    {'role':'user', 'content':few_user},
-                    {'role':'assistant', 'content':few_assistant},
-                    {'role':'user', 'content':context}
-                ]
-            )
-            response = completions.choices[0]['message']['content']
+            try:
+                # GPT API call
+                completions = openai.ChatCompletion.create(
+                    model = model,
+                    temperature = temp,
+                    n = 1,
+                    messages = [
+                        {'role':'system', 'content':system_msg},
+                        {'role':'user', 'content':few_user},
+                        {'role':'assistant', 'content':few_assistant},
+                        {'role':'user', 'content':context}
+                    ]
+                )
+                response = completions.choices[0]['message']['content']
+            except Exception as e:
+                print(e)
+            
             # Add XML tags. May need to consider processing only the last TLINK sentence.
             if re.search(r'"\s?/>$', response[-25:]):
                 response = '<TAGS>\n' + response + '\n</TAGS>'
