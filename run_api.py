@@ -24,7 +24,7 @@ def run_re(output_dir, few_shot = True):
     temp = float(config['openai']['temperature'])
     
     # Create folder store output
-    date_path = "output_" + date.today().strftime("%y%m%d") + "/re"
+    date_path = "output_" + config['openai']['model'] + '_' + date.today().strftime("%y%m%d") + "/re"
     path = os.path.join(output_dir, date_path)
     if not os.path.exists(path):
         os.makedirs(path)
