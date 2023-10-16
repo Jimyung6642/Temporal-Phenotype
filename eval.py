@@ -1,5 +1,5 @@
 import tqdm as td
-import os, glob, chardet
+import os, glob
 from datetime import date
 
 import pandas as pd
@@ -42,6 +42,9 @@ def eval_re(output_dir, execute_date = None):
             gold = f.read()
         with open(output, 'r') as f:
             gpt_output = f.read()
+            
+        # Replace unescaped special characters
+        gpt_output = gpt_output.replace('&', '&amp;')
         
         ## Process original list
         original_root = ET.fromstring(gold)
