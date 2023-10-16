@@ -6,10 +6,10 @@ from generate_data import generate_eval_data, generate_input_data
 from eval import eval_re
 from run_api import run_re
 
-import datetime as date
+from datetime import datetime as date
 
 os.chdir('/phi_home/jp4453/Temporal-Phenotype')
-file_log = './tRE.log' + date.today().strftime("%y%m%d")
+file_log = './tRE.log_' + date.today().strftime("%y%m%d")
 
 if __name__ == "__main__":
     try:
