@@ -69,6 +69,7 @@ def run_re(output_dir, few_shot = True):
             if 'toID' not in lines[-1] or 'fromID' not in lines[-1] or 'type' not in lines[-1]:
                 lines.pop()
             response = '\n'.join(lines)
+            response = '<TAGS>\n' + response + '\n</TAGS>'
             
             output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
             with open(output_file, 'w', encoding='utf-8') as f:
@@ -94,9 +95,11 @@ def run_re(output_dir, few_shot = True):
             response = completions.choices[0]['message']['content']
             
             lines = response.strip().split('\n')
-            if 'toID' not in lines[-1] or 'fromID' not in lines[-1] or 'type' not in lines[-1]:
-                lines.pop()
+            # if 'toID' not in lines[-1] or 'fromID' not in lines[-1] or 'type' not in lines[-1]:
+            #     lines.pop()
+            lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
             response = '\n'.join(lines)
+            response = '<TAGS>\n' + response + '\n</TAGS>'
             
             output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
             with open(output_file, 'w', encoding='utf-8') as f:
