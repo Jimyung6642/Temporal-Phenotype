@@ -1,6 +1,7 @@
 import tqdm as td
 import os, glob
 from datetime import date
+import configparser
 
 import pandas as pd
 
@@ -24,12 +25,16 @@ def eval_re(output_dir, execute_date = None):
     # Read gold standard data
     original_files = glob.glob(os.path.join(output_dir, 'eval/re', '*.xml'))
     # Read GPT generated output
+    config = configparser.ConfigParser()
+    config.read(os.path.join(os.getcwd(), "api.config"))
+    model = config['openai']['model']
+    
     if execute_date is None:
-        date_path = "output_" + date.today().strftime("%y%m%d") + "/re"
+        date_path = "output_" + model + "_" + date.today().strftime("%y%m%d") + "/re"
         path = os.path.join(output_dir, date_path)
         output_files = glob.glob(os.path.join(path, '*.xml'))
     else:
-        date_path = "output_" + execute_date + "/re"
+        date_path = "output_" + model + "_" + execute_date + "/re"
         path = os.path.join(output_dir, date_path)
         output_files = glob.glob(os.path.join(path, '*.xml'))
         

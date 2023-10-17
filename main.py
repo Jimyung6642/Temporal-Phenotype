@@ -9,7 +9,7 @@ from run_api import run_re
 from datetime import datetime as date
 
 os.chdir('/phi_home/jp4453/Temporal-Phenotype')
-file_log = './tRE.log_' + date.today().strftime("%y%m%d")
+file_log = './tRE_' + date.today().strftime("%y%m%d") + '.log' 
 
 if __name__ == "__main__":
     try:
