@@ -48,7 +48,7 @@ def generate_input_data(input_dir, output_dir):
     train_files = glob.glob(os.path.join(input_dir, 'train/*.xml'))
     test_files = glob.glob(os.path.join(input_dir, 'test/*.xml'))
     xml_files = train_files + test_files
-    for xml_file in td.tqdm(xml_files, desc="Generaing RE input data", unit="file"):
+    for xml_file in td.tqdm(xml_files, desc="Generating RE input data", unit="file"):
         with open(xml_file, 'rb') as f:
             rawdata = f.read()
         encoding = chardet.detect(rawdata)['encoding']
@@ -110,7 +110,7 @@ def generate_eval_data(input_dir, output_dir):
     xml_files = train_files + test_files        
             
     ### Generate NER eval data    
-    for xml_file in td.tqdm(xml_files, desc="Generaing NER eval data", unit="file"):
+    for xml_file in td.tqdm(xml_files, desc="Generating NER eval data", unit="file"):
         with open(xml_file, 'rb') as f:
             rawdata = f.read()
         encoding = chardet.detect(rawdata)['encoding']
@@ -204,7 +204,7 @@ def generate_eval_data(input_dir, output_dir):
             f.write(reparsed)
     
     ### Generate NER-RE eval data
-    for xml_file in td.tqdm(xml_files, desc="Generaing NER-RE eval data", unit="file"):
+    for xml_file in td.tqdm(xml_files, desc="Generating NER-RE eval data", unit="file"):
         with open(xml_file, 'rb') as f:
             rawdata = f.read()
         encoding = chardet.detect(rawdata)['encoding']

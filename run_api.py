@@ -37,7 +37,7 @@ def run_re(output_dir, few_shot = True):
         few_user = config['RE']['few_user']
         few_assistant = config['RE']['few_assistant']
         
-        for note in td.tqdm(notes, desc="Generate RE output from i2b2", unit="files"):
+        for note in td.tqdm(notes, desc="Generating RE output from i2b2", unit="files"):
             with open(note, 'r') as f:
                 context = f.read()
             
@@ -78,7 +78,7 @@ def run_re(output_dir, few_shot = True):
     else:
         system_msg = config['RE']['zero_prompt']
         
-        for note in td.tqdm(notes, desc="Generate RE output from i2b2", unit="files"):
+        for note in td.tqdm(notes, desc="Generating RE output from i2b2", unit="files"):
             with open(note, 'r') as f:
                 context = f.read()
             
