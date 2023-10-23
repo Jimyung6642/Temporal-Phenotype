@@ -45,19 +45,18 @@ if __name__ == "__main__":
         
         # Run GPT API function
         logger.info('Run GPT API for the temporal relation extraction')
-        run_re(output_dir, few_shot = True)
+        run_re(output_dir, few_shot = False)
         
         # Evaluate GPT output
         logger.info('Evaluate tRE output')
         micro_precision, micro_recall, micro_f1, macro_precision, macro_recall, macro_f1 = eval_re(output_dir, execute_date = None)
         
-        logger.info(f'macro precision: {macro_precision}')
-        logger.info(f'macro recall: {macro_recall}')
-        logger.info(f'macro f1: {macro_f1}')
-        logger.info(f'micro precesion: {micro_precision}')
-        logger.info(f'micro recall: {micro_recall}')
-        logger.info(f'micro f1: {micro_f1}')
-        
+        logger.info(f'tRE macro precision: {macro_precision}')
+        logger.info(f'tRE macro recall: {macro_recall}')
+        logger.info(f'tRE macro f1: {macro_f1}')
+        logger.info(f'tRE micro precesion: {micro_precision}')
+        logger.info(f'tRE micro recall: {micro_recall}')
+        logger.info(f'tRE micro f1: {micro_f1}')
         
         # Neeed to be implemented
         # Standardize extracted temporal related concepts

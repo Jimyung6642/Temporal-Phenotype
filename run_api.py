@@ -24,7 +24,10 @@ def run_re(output_dir, few_shot = True):
     temp = float(config['openai']['temperature'])
     
     # Create folder store output
-    date_path = "output_" + config['openai']['model'] + '_' + date.today().strftime("%y%m%d") + "/re"
+    if few_shot:
+        date_path = "output_" + 'one_' + config['openai']['model'] + '_' + date.today().strftime("%y%m%d") + "/re"
+    else:
+        date_path = "output_" + 'zero_' + config['openai']['model'] + '_' + date.today().strftime("%y%m%d") + "/re"
     path = os.path.join(output_dir, date_path)
     if not os.path.exists(path):
         os.makedirs(path)
@@ -66,8 +69,9 @@ def run_re(output_dir, few_shot = True):
             
             # Remove the last XML entity if it doesn't have toID, fromID, or type.
             lines = response.strip().split('\n')
-            if 'toID' not in lines[-1] or 'fromID' not in lines[-1] or 'type' not in lines[-1]:
-                lines.pop()
+            # if 'toID' not in lines[-1] or 'fromID' not in lines[-1] or 'type' not in lines[-1]:
+            #     lines.pop()                
+            lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
             response = '\n'.join(lines)
             response = '<TAGS>\n' + response + '\n</TAGS>'
             
