@@ -66,7 +66,7 @@ def run_ner(output_dir: str, few_shot: bool = True):
                     
                 # Remove incomplete reponse
                 lines = response.strip().split('\n')
-                lines = [line for line in lines if all(keyword in line for keyword in ('toText', 'fromText', 'type'))]
+                lines = [line for line in lines if all(keyword in line for keyword in ('text', 'type'))]
                 response = '\n'.join(lines)
                 response = '<TAGS>\n' + response + '\n</TAGS>'
                 
@@ -99,7 +99,7 @@ def run_ner(output_dir: str, few_shot: bool = True):
                     print(e)
                 
                 lines = response.strip().split('\n')
-                lines = [line for line in lines if all(keyword in line for keyword in ('toText', 'fromText', 'type'))]
+                lines = [line for line in lines if all(keyword in line for keyword in ('text', 'type'))]
                 response = '\n'.join(lines)
                 response = '<TAGS>\n' + response + '\n</TAGS>'
                 
