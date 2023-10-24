@@ -41,10 +41,49 @@ def run_re(output_dir, few_shot = True):
         few_assistant = config['RE']['few_assistant']
         
         for note in td.tqdm(notes, desc="Generating RE output from i2b2", unit="files"):
-            with open(note, 'r') as f:
-                context = f.read()
-            
-            try:
+            if os.path.exists(os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')):
+                print('output exists: %s' % os.path.splitext(os.path.basename(note))[0])
+            else:
+                with open(note, 'r') as f:
+                    context = f.read()
+                
+                try:
+                    # GPT API call
+                    completions = openai.ChatCompletion.create(
+                        model = model,
+                        temperature = temp,
+                        n = 1,
+                        messages = [
+                            {'role':'system', 'content':system_msg},
+                            {'role':'user', 'content':few_user},
+                            {'role':'assistant', 'content':few_assistant},
+                            {'role':'user', 'content':context}
+                        ]
+                    )
+                    response = completions.choices[0]['message']['content']
+                except Exception as e:
+                    print(e)
+                    
+                # Remove the last XML entity if it doesn't have toID, fromID, or type.
+                lines = response.strip().split('\n')
+                lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
+                response = '\n'.join(lines)
+                response = '<TAGS>\n' + response + '\n</TAGS>'
+                
+                output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(response)
+        
+    else:
+        system_msg = config['RE']['zero_prompt']
+        
+        for note in td.tqdm(notes, desc="Generating RE output from i2b2", unit="files"):
+            if os.path.exists(os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')):
+                print('output exists: %s' % os.path.splitext(os.path.basename(note))[0])
+            else:
+                with open(note, 'r') as f:
+                    context = f.read()
+                
                 # GPT API call
                 completions = openai.ChatCompletion.create(
                     model = model,
@@ -52,62 +91,19 @@ def run_re(output_dir, few_shot = True):
                     n = 1,
                     messages = [
                         {'role':'system', 'content':system_msg},
-                        {'role':'user', 'content':few_user},
-                        {'role':'assistant', 'content':few_assistant},
                         {'role':'user', 'content':context}
                     ]
                 )
                 response = completions.choices[0]['message']['content']
-            except Exception as e:
-                print(e)
-            
-            # # Add XML tags. May need to consider processing only the last TLINK sentence.
-            # if re.search(r'"\s?/>$', response[-25:]):
-            #     response = '<TAGS>\n' + response + '\n</TAGS>'
-            # else: 
-            #     response = '<TAGS>\n' + response + '" />' + '\n</TAGS>'
-            
-            # Remove the last XML entity if it doesn't have toID, fromID, or type.
-            lines = response.strip().split('\n')
-            # if 'toID' not in lines[-1] or 'fromID' not in lines[-1] or 'type' not in lines[-1]:
-            #     lines.pop()                
-            lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
-            response = '\n'.join(lines)
-            response = '<TAGS>\n' + response + '\n</TAGS>'
-            
-            output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
-            with open(output_file, 'w', encoding='utf-8') as f:
-                f.write(response)
-        
-    else:
-        system_msg = config['RE']['zero_prompt']
-        
-        for note in td.tqdm(notes, desc="Generating RE output from i2b2", unit="files"):
-            with open(note, 'r') as f:
-                context = f.read()
-            
-            # GPT API call
-            completions = openai.ChatCompletion.create(
-                model = model,
-                temperature = temp,
-                n = 1,
-                messages = [
-                    {'role':'system', 'content':system_msg},
-                    {'role':'user', 'content':context}
-                ]
-            )
-            response = completions.choices[0]['message']['content']
-            
-            lines = response.strip().split('\n')
-            # if 'toID' not in lines[-1] or 'fromID' not in lines[-1] or 'type' not in lines[-1]:
-            #     lines.pop()
-            lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
-            response = '\n'.join(lines)
-            response = '<TAGS>\n' + response + '\n</TAGS>'
-            
-            output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
-            with open(output_file, 'w', encoding='utf-8') as f:
-                f.write(response)
+                
+                lines = response.strip().split('\n')
+                lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
+                response = '\n'.join(lines)
+                response = '<TAGS>\n' + response + '\n</TAGS>'
+                
+                output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(response)
 
 def run_nerre():
     pass
