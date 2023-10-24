@@ -7,7 +7,7 @@ from datetime import date
 import re
 
 
-def run_ner(output_dir: str, few_shot: bool = True):
+def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
     '''
     Do named entity recognition - problem, test, treatment
     
@@ -47,22 +47,26 @@ def run_ner(output_dir: str, few_shot: bool = True):
                 with open(note, 'r') as f:
                     content = f.read()
                 
-                # Call GPT API
-                try:
-                    completions = openai.ChatCompletion.create(
-                        model = model,
-                        temperature = temp,
-                        n = 1,
-                        messages = [
-                            {'role':'system', 'content':system_msg},
-                            {'role':'user', 'content':few_user},
-                            {'role':'assistant', 'content':few_assistant},
-                            {'role':'user', 'content':content}
-                        ]
-                    )
-                    response = completions.choices[0]['message']['content']
-                except Exception as e:
-                    print(e)
+                # Call GPT API -> Re-call API upto 5 times
+                api_no = 1
+                while api_no < api_retry:
+                    try:
+                        completions = openai.ChatCompletion.create(
+                            model = model,
+                            temperature = temp,
+                            n = 1,
+                            messages = [
+                                {'role':'system', 'content':system_msg},
+                                {'role':'user', 'content':few_user},
+                                {'role':'assistant', 'content':few_assistant},
+                                {'role':'user', 'content':content}
+                            ]
+                        )
+                        response = completions.choices[0]['message']['content']
+                        break
+                    except Exception as e:
+                        api_no += 1
+                        print(f"{api_no}th API error: \n{e}\n")
                     
                 # Remove incomplete reponse
                 lines = response.strip().split('\n')
@@ -83,20 +87,24 @@ def run_ner(output_dir: str, few_shot: bool = True):
             else:
                 with open(note, 'r') as f:
                     content = f.read()
-                    
-                try:
-                    completions = openai.ChatCompletion.create(
-                        model = model,
-                        temperature = temp,
-                        n = 1,
-                        messages = [
-                            {'role':'system', 'content': system_msg},
-                            {'role':'user', 'content':content}
-                        ]
-                    )
-                    response = completions.choices[0]['message']['content']
-                except Exception as e:
-                    print(e)
+                
+                api_no = 1
+                while api_no < api_retry:    
+                    try:
+                        completions = openai.ChatCompletion.create(
+                            model = model,
+                            temperature = temp,
+                            n = 1,
+                            messages = [
+                                {'role':'system', 'content': system_msg},
+                                {'role':'user', 'content':content}
+                            ]
+                        )
+                        response = completions.choices[0]['message']['content']
+                        break
+                    except Exception as e:
+                        api_no += 1
+                        print(f"Error: {e}\n {api_no}th API re-call")
                 
                 lines = response.strip().split('\n')
                 lines = [line for line in lines if all(keyword in line for keyword in ('text', 'type'))]
@@ -108,7 +116,7 @@ def run_ner(output_dir: str, few_shot: bool = True):
                     f.write(response)
     
 
-def run_re(output_dir: str, few_shot: bool = True):
+def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
     '''
     Do temporal relation extraction
     
@@ -147,22 +155,26 @@ def run_re(output_dir: str, few_shot: bool = True):
                 with open(note, 'r') as f:
                     content = f.read()
                 
-                try:
-                    # GPT API call
-                    completions = openai.ChatCompletion.create(
-                        model = model,
-                        temperature = temp,
-                        n = 1,
-                        messages = [
-                            {'role':'system', 'content':system_msg},
-                            {'role':'user', 'content':few_user},
-                            {'role':'assistant', 'content':few_assistant},
-                            {'role':'user', 'content':content}
-                        ]
-                    )
-                    response = completions.choices[0]['message']['content']
-                except Exception as e:
-                    print(e)
+                api_no = 1
+                while api_no < api_retry:
+                    try:
+                        # GPT API call
+                        completions = openai.ChatCompletion.create(
+                            model = model,
+                            temperature = temp,
+                            n = 1,
+                            messages = [
+                                {'role':'system', 'content':system_msg},
+                                {'role':'user', 'content':few_user},
+                                {'role':'assistant', 'content':few_assistant},
+                                {'role':'user', 'content':content}
+                            ]
+                        )
+                        response = completions.choices[0]['message']['content']
+                        break
+                    except Exception as e:
+                        api_no += 1
+                        print(f"Error: {e}\n {api_no}th API re-call")
                     
                 # Remove the last XML entity if it doesn't have toID, fromID, or type.
                 lines = response.strip().split('\n')
@@ -185,19 +197,23 @@ def run_re(output_dir: str, few_shot: bool = True):
                     content = f.read()
                 
                 # GPT API call
-                try:
-                    completions = openai.ChatCompletion.create(
-                        model = model,
-                        temperature = temp,
-                        n = 1,
-                        messages = [
-                            {'role':'system', 'content':system_msg},
-                            {'role':'user', 'content':content}
-                        ]
-                    )
-                    response = completions.choices[0]['message']['content']
-                except Exception as e:
-                    print(e)
+                api_no = 1
+                while api_no < api_retry:
+                    try:
+                        completions = openai.ChatCompletion.create(
+                            model = model,
+                            temperature = temp,
+                            n = 1,
+                            messages = [
+                                {'role':'system', 'content':system_msg},
+                                {'role':'user', 'content':content}
+                            ]
+                        )
+                        response = completions.choices[0]['message']['content']
+                        break
+                    except Exception as e:
+                        api_no += 1
+                        print(f"Error: {e}\n {api_no}th API re-call")                        
                 
                 lines = response.strip().split('\n')
                 lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
@@ -208,7 +224,7 @@ def run_re(output_dir: str, few_shot: bool = True):
                 with open(output_file, 'w', encoding='utf-8') as f:
                     f.write(response)
 
-def run_nerre(output_dir: str, few_shot: bool = True):
+def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
     '''
     Do end-to-end relation extraction
     
@@ -247,21 +263,25 @@ def run_nerre(output_dir: str, few_shot: bool = True):
                 with open(note, 'r') as f:
                     content = f.read()
                     
-                try:
-                    completions = openai.ChatCompletion.create(
-                        model = model,
-                        temperature = temp,
-                        n = 1,
-                        messages = [
-                            {'role':'system', 'content':system_msg},
-                            {'role':'user', 'content':few_user},
-                            {'role':'assistant', 'content':few_assistant},
-                            {'role':'user', 'content':content}
-                        ]
-                    )
-                    response = completions.choices[0]['message']['content']
-                except Exception as e:
-                    print(e)
+                api_no = 1
+                while api_no < api_retry:
+                    try:
+                        completions = openai.ChatCompletion.create(
+                            model = model,
+                            temperature = temp,
+                            n = 1,
+                            messages = [
+                                {'role':'system', 'content':system_msg},
+                                {'role':'user', 'content':few_user},
+                                {'role':'assistant', 'content':few_assistant},
+                                {'role':'user', 'content':content}
+                            ]
+                        )
+                        response = completions.choices[0]['message']['content']
+                        break
+                    except Exception as e:
+                        api_no += 1
+                        print(f"Error: {e}\n {api_no}th API re-call")
                     
                 # Remove incomplete responses
                 lines = response.strip().split('\n')
@@ -282,20 +302,24 @@ def run_nerre(output_dir: str, few_shot: bool = True):
             else:
                 with open(note, 'r') as f:
                     content = f.read()
-                    
-                try:
-                    completions = openai.ChatCompletion.create(
-                        model = model,
-                        temperature = temp,
-                        n = 1,
-                        messages = [
-                            {'role':'system', 'content':system_msg},
-                            {'role':'user', 'content':content}
-                        ]
-                    )
-                    response = completions.choices[0]['message']['content']
-                except Exception as e:
-                    print(e)
+                       
+                api_no = 1
+                while api_no < api_retry:
+                    try:
+                        completions = openai.ChatCompletion.create(
+                            model = model,
+                            temperature = temp,
+                            n = 1,
+                            messages = [
+                                {'role':'system', 'content':system_msg},
+                                {'role':'user', 'content':content}
+                            ]
+                        )
+                        response = completions.choices[0]['message']['content']
+                        break
+                    except Exception as e:
+                        api_no += 1
+                        print(f"Error: {e}\n {api_no}th API re-call")
             
                 lines = response.strip().split('\n')
                 lines = [line for line in lines if all(keyword in line for keyword in ('toID','fromID','type'))]
