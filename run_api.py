@@ -4,6 +4,7 @@ import configparser
 import tqdm as td
 import os, glob, chardet
 from datetime import date
+import time
 import re
 
 
@@ -65,8 +66,10 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        api_no += 1
                         print(f"{api_no}th API error: \n{e}\n")
+                        sleep.sleep(30)
+                        print(f"susepnding 30 secs to avoid max retries...")
+                        api_no += 1
                     
                 # Remove incomplete reponse
                 lines = response.strip().split('\n')
@@ -103,8 +106,10 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        api_no += 1
                         print(f"Error: {e}\n {api_no}th API re-call")
+                        time.sleep(30)
+                        print(f"susepnding 30 secs to avoid max retries...")
+                        api_no += 1
                 
                 lines = response.strip().split('\n')
                 lines = [line for line in lines if all(keyword in line for keyword in ('text', 'type'))]
@@ -173,8 +178,10 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        api_no += 1
                         print(f"Error: {e}\n {api_no}th API re-call")
+                        time.sleep(30)
+                        print(f"susepnding 30 secs to avoid max retries...")
+                        api_no += 1
                     
                 # Remove the last XML entity if it doesn't have toID, fromID, or type.
                 lines = response.strip().split('\n')
@@ -212,8 +219,10 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
+                        print(f"Error: {e}\n {api_no}th API re-call")                      
+                        time.sleep(30)
+                        print(f"susepnding 30 secs to avoid max retries...")  
                         api_no += 1
-                        print(f"Error: {e}\n {api_no}th API re-call")                        
                 
                 lines = response.strip().split('\n')
                 lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
@@ -280,14 +289,16 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        api_no += 1
                         print(f"Error: {e}\n {api_no}th API re-call")
+                        time.sleep(30)
+                        print(f"susepnding 30 secs to avoid max retries...")
+                        api_no += 1
                     
                 # Remove incomplete responses
                 lines = response.strip().split('\n')
                 lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
                 response = '\n'.join(lines)
-                response = '<TAGS>\n' + response + '</TAGS>'
+                response = '<TAGS>\n' + response + '\n</TAGS>'
                 
                 output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
                 with open(output_file, 'w', encoding = 'utf-8') as f:
@@ -318,8 +329,10 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        api_no += 1
                         print(f"Error: {e}\n {api_no}th API re-call")
+                        time.sleep(30)
+                        print(f"susepnding 30 secs to avoid max retries...")
+                        api_no += 1
             
                 lines = response.strip().split('\n')
                 lines = [line for line in lines if all(keyword in line for keyword in ('toID','fromID','type'))]
