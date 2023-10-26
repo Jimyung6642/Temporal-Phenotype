@@ -6,6 +6,7 @@ import configparser
 import pandas as pd
 
 import xml.etree.ElementTree as ET
+import re
 
 def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
     '''
@@ -170,6 +171,13 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
             
         # Replace unescaped special characters
         gpt_output = gpt_output.replace('&', '&amp;')
+        # Remove incomplete lines
+        lines = gpt_output.strip().split('\n')
+        lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
+        gpt_output = '\n'.join(lines)
+        gpt_output = '<TAGS>\n' + gpt_output + '\n</TAGS>'
+        # Remove xml tags in text snippet
+        gpt_output = re.sub(r'(<EVENT.*?/EVENT>)|(<TIMEX.*?/TIMEX>)|(<EVENT|<TIMEX|</EVENT>|</TIMEX>)', '', gpt_output)
         
         ## Process original list
         original_root = ET.fromstring(gold)
