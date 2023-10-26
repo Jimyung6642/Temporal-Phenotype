@@ -41,7 +41,7 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
         few_user = config['RE']['few_user']
         few_assistant = config['NER']['few_assistant']
         
-        logging.ingo(f'start API reqeusts...')
+        logging.info(f'start API reqeusts...')
         for note in td.tqdm(notes, desc = "Generating NER output from i2b2", unit = "files"):
             if os.path.exists(os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')):
                 logging.info('output exists: %s' % note)
@@ -89,7 +89,7 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
                     
     else: # zero_shot
-        system_msg = config['NER']['zero_promt']
+        system_msg = config['NER']['zero_prompt']
         
         logging.info(f'start API reqeusts...')
         for note in td.tqdm(notes, desc = "Generating NER output from i2b2", unit = "files"):
