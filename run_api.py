@@ -2,10 +2,9 @@ import openai
 import configparser
 
 import tqdm as td
-import os, glob, chardet
+import os, glob
 from datetime import date
 import time
-import re
 
 
 def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
@@ -52,6 +51,7 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:
                     try:
+                        print(f"starting {api_no}th API calling...")
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -67,19 +67,23 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         break
                     except Exception as e:
                         print(f"{api_no}th API error: \n{e}\n")
-                        sleep.sleep(30)
                         print(f"susepnding 30 secs to avoid max retries...")
+                        time.sleep(30)
                         api_no += 1
+                        response = ''
+                        
+                if not response=='':
+                    # Remove incomplete reponse
+                    lines = response.strip().split('\n')
+                    lines = [line for line in lines if all(keyword in line for keyword in ('text', 'type'))]
+                    response = '\n'.join(lines)
+                    response = '<TAGS>\n' + response + '\n</TAGS>'
                     
-                # Remove incomplete reponse
-                lines = response.strip().split('\n')
-                lines = [line for line in lines if all(keyword in line for keyword in ('text', 'type'))]
-                response = '\n'.join(lines)
-                response = '<TAGS>\n' + response + '\n</TAGS>'
-                
-                output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(response)
+                    output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
+                    with open(output_file, 'w', encoding='utf-8') as f:
+                        f.write(response)
+                else: 
+                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
                     
     else: # zero_shot
         system_msg = config['NER']['zero_promt']
@@ -94,6 +98,7 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:    
                     try:
+                        print(f"starting {api_no}th API calling...")
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -107,18 +112,22 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         break
                     except Exception as e:
                         print(f"Error: {e}\n {api_no}th API re-call")
-                        time.sleep(30)
                         print(f"susepnding 30 secs to avoid max retries...")
+                        time.sleep(30)
                         api_no += 1
+                        response = ''
                 
-                lines = response.strip().split('\n')
-                lines = [line for line in lines if all(keyword in line for keyword in ('text', 'type'))]
-                response = '\n'.join(lines)
-                response = '<TAGS>\n' + response + '\n</TAGS>'
-                
-                output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
-                with open(output_file, 'w', encoding = 'utf-8') as f:
-                    f.write(response)
+                if not response == '':
+                    lines = response.strip().split('\n')
+                    lines = [line for line in lines if all(keyword in line for keyword in ('text', 'type'))]
+                    response = '\n'.join(lines)
+                    response = '<TAGS>\n' + response + '\n</TAGS>'
+                    
+                    output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
+                    with open(output_file, 'w', encoding = 'utf-8') as f:
+                        f.write(response)
+                else: 
+                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
     
 
 def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
@@ -163,7 +172,7 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:
                     try:
-                        # GPT API call
+                        print(f"starting {api_no}th API calling...")
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -179,19 +188,23 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         break
                     except Exception as e:
                         print(f"Error: {e}\n {api_no}th API re-call")
-                        time.sleep(30)
                         print(f"susepnding 30 secs to avoid max retries...")
+                        time.sleep(30)
                         api_no += 1
+                        response = ''
+                                            
+                if not response == '':
+                    # Remove the last XML entity if it doesn't have toID, fromID, or type.
+                    lines = response.strip().split('\n')
+                    lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
+                    response = '\n'.join(lines)
+                    response = '<TAGS>\n' + response + '\n</TAGS>'
                     
-                # Remove the last XML entity if it doesn't have toID, fromID, or type.
-                lines = response.strip().split('\n')
-                lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
-                response = '\n'.join(lines)
-                response = '<TAGS>\n' + response + '\n</TAGS>'
-                
-                output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(response)
+                    output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
+                    with open(output_file, 'w', encoding='utf-8') as f:
+                        f.write(response)
+                else: 
+                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
         
     else:
         system_msg = config['RE']['zero_prompt']
@@ -207,6 +220,7 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:
                     try:
+                        print(f"starting {api_no}th API calling...")
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -220,18 +234,22 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         break
                     except Exception as e:
                         print(f"Error: {e}\n {api_no}th API re-call")                      
-                        time.sleep(30)
                         print(f"susepnding 30 secs to avoid max retries...")  
+                        time.sleep(30)
                         api_no += 1
-                
-                lines = response.strip().split('\n')
-                lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
-                response = '\n'.join(lines)
-                response = '<TAGS>\n' + response + '\n</TAGS>'
-                
-                output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(response)
+                        response = ''
+                                        
+                if not response == '':
+                    lines = response.strip().split('\n')
+                    lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
+                    response = '\n'.join(lines)
+                    response = '<TAGS>\n' + response + '\n</TAGS>'
+                    
+                    output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
+                    with open(output_file, 'w', encoding='utf-8') as f:
+                        f.write(response)
+                else: 
+                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
 
 def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
     '''
@@ -275,6 +293,7 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:
                     try:
+                        print(f"starting {api_no}th API calling...")
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -290,19 +309,23 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         break
                     except Exception as e:
                         print(f"Error: {e}\n {api_no}th API re-call")
-                        time.sleep(30)
                         print(f"susepnding 30 secs to avoid max retries...")
+                        time.sleep(30)
                         api_no += 1
+                        response = ''
+
+                if not response == '':                                            
+                    # Remove incomplete responses
+                    lines = response.strip().split('\n')
+                    lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
+                    response = '\n'.join(lines)
+                    response = '<TAGS>\n' + response + '\n</TAGS>'
                     
-                # Remove incomplete responses
-                lines = response.strip().split('\n')
-                lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
-                response = '\n'.join(lines)
-                response = '<TAGS>\n' + response + '\n</TAGS>'
-                
-                output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
-                with open(output_file, 'w', encoding = 'utf-8') as f:
-                    f.write(response)
+                    output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
+                    with open(output_file, 'w', encoding = 'utf-8') as f:
+                        f.write(response)
+                else: 
+                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
     
     else:
         system_msg = config['NERRE']['zero_prompt']
@@ -317,6 +340,7 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:
                     try:
+                        print(f"starting {api_no}th API calling...")
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -330,15 +354,19 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         break
                     except Exception as e:
                         print(f"Error: {e}\n {api_no}th API re-call")
-                        time.sleep(30)
                         print(f"susepnding 30 secs to avoid max retries...")
+                        time.sleep(30)
                         api_no += 1
-            
-                lines = response.strip().split('\n')
-                lines = [line for line in lines if all(keyword in line for keyword in ('toID','fromID','type'))]
-                response = '\n'.join(lines)
-                response = '<TAGS>\n' + response + '\n</TAGS>'
+                        response = ''
                 
-                output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(response)
+                if not response == '':                                    
+                    lines = response.strip().split('\n')
+                    lines = [line for line in lines if all(keyword in line for keyword in ('toID','fromID','type'))]
+                    response = '\n'.join(lines)
+                    response = '<TAGS>\n' + response + '\n</TAGS>'
+                    
+                    output_file = os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')
+                    with open(output_file, 'w', encoding='utf-8') as f:
+                        f.write(response)
+                else: 
+                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
