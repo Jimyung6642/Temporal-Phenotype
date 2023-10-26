@@ -8,11 +8,11 @@ from run_api import run_ner, run_re, run_nerre
 
 from datetime import datetime as date
 
-os.chdir('/Users/jimmypark/Documents/git/Temporal-Phenotype')
-file_log = './tRE_' + date.today().strftime("%y%m%d") + '.log' 
-
 if __name__ == "__main__":
     try:
+        os.chdir('/Users/jimmypark/Documents/git/Temporal-Phenotype')
+        file_log = './tRE_' + date.today().strftime("%y%m%d") + '.log' 
+        
         # Setup logging
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
@@ -26,13 +26,16 @@ if __name__ == "__main__":
         logger.addHandler(fh)
         logger.addHandler(ch)
         
+        logger.info('============================================================')
+        logger.info('Start!')
+        logger.info('============================================================')
+        
         # Set input and output directories
         input_dir = os.path.join(os.getcwd(), 'i2b2-2012-original')
-        if os.path.exists(input_dir):
+        if not os.path.exists(input_dir):
             logging.error(f'i2b2-2012-original directory does not exist. Please uploaed data or change directory name to i2b2-2012-original')
         output_dir = os.path.join(os.getcwd(), 'result') 
         
-        logger.info('============================================================')
         logger.info(f'i2b2 data path: {input_dir}')
         logger.info(f'output directory path: {output_dir}')
         
@@ -171,7 +174,11 @@ if __name__ == "__main__":
         else:
             logger.info(f'pass evaluating zero-shot ner-re output')
         
+        # Normalize temporal information into structured format
+        
+        logger.info('============================================================')
         logger.info('Done!')
+        logger.info('============================================================')
 
     except Exception as e:
         logger.exception(e)       
