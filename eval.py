@@ -53,39 +53,48 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
         
         # Replace unescaped special characters
         gpt_output = gpt_output.replace('&', '&amp;')
+        # Remove incomplete lines
+        lines = gpt_output.strip().split('\n')
+        lines = [line for line in lines if all(keyword in line for keyword in ('text', 'type'))]
+        gpt_output = '\n'.join(lines)
+        gpt_output = '<TAGS>\n' + gpt_output + '\n</TAGS>'
         # Process original list
         original_root = ET.fromstring(gold)
         original_rows_by_note = []
         # Append by individual note
-        for event in original_root.findall("EVENT"):
-            row = {
-                'noteID': os.path.splitext(os.path.base),
-                'id': event.get('id'),
-                'start': event.get('start'),
-                'end': event.get('end'),
-                'text': event.get('text'),
-                'type': event.get('type')
-            }
-            original_rows_by_note.append(row)
-        # Append by whole corpus
-        df_original_list.append(pd.DataFrame(original_rows_by_note))
-        
-        ## Process output list
-        output_root = ET.fromstring(gpt_output)
-        output_rows_by_note = []
-        # Append by individual note
-        for event in output_root.findall("EVENT"):
-            row = {
-                'noteID': os.path.splitext(os.path.basename(output))[0],
-                'id': event.get('id'),
-                'start': event.get('start'),
-                'end': event.get('end'),
-                'text': event.get('text'),
-                'type': event.get('type')
-            }
-            output_rows_by_note.append(row)
-        # Append by whoel corpus
-        df_output_list.append(pd.DataFrame(output_rows_by_note))
+        try:
+            for event in original_root.findall("EVENT"):
+                row = {
+                    'noteID': os.path.splitext(os.path.base),
+                    'id': event.get('id'),
+                    'start': event.get('start'),
+                    'end': event.get('end'),
+                    'text': event.get('text'),
+                    'type': event.get('type')
+                }
+                original_rows_by_note.append(row)
+            # Append by whole corpus
+            df_original_list.append(pd.DataFrame(original_rows_by_note))
+            
+            ## Process output list
+            output_root = ET.fromstring(gpt_output)
+            output_rows_by_note = []
+            # Append by individual note
+            for event in output_root.findall("EVENT"):
+                row = {
+                    'noteID': os.path.splitext(os.path.basename(output))[0],
+                    'id': event.get('id'),
+                    'start': event.get('start'),
+                    'end': event.get('end'),
+                    'text': event.get('text'),
+                    'type': event.get('type')
+                }
+                output_rows_by_note.append(row)
+            # Append by whoel corpus
+            df_output_list.append(pd.DataFrame(output_rows_by_note))
+        except Exception as e:
+            logging.error(f'Error merging output files for evaluation: \n{e}\n')
+            logging.error(f'Error occurred file: {output}')
         
     df_original = pd.concat(df_original_list, ignore_index = True)
     df_output = pd.concat(df_output_list, ignore_index = True)
@@ -101,6 +110,12 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
     micro_precision = TP / (TP + FP) if TP + FP != 0 else 0
     micro_recall = TP / (TP + FN) if TP + FN != 0 else 0
     micro_f1 = (2 * micro_precision * micro_recall) / (micro_precision + micro_recall) if micro_precision + micro_recall != 0 else 0
+
+    logging.info(f'Performance of named entity recognition:\n{path}')
+    logging.info(f'================================')
+    logging.info(f'micro-precission: {micro_precision}')
+    logging.info(f'micro-recall: {micro_recall}')
+    logging.info(f'micro-f1: {micro_f1}')
 
     # For macro-average, we need to calculate metrics for each 'type' and then average them
     types = df_original['type'].unique().tolist() + df_output['type'].unique().tolist()
@@ -125,7 +140,10 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
     macro_recall = sum(macro_recall_list) / len(macro_recall_list)
     macro_f1 = sum(macro_f1_list) / len(macro_f1_list)
     
-    return micro_precision, micro_recall, micro_f1, macro_precision, macro_recall, macro_f1
+    logging.info(f'macro precision: {macro_precision}')
+    logging.info(f'macro recall: {macro_recall}')
+    logging.info(f'macro f1: {macro_f1}')
+    return merged_df
 
 
 def eval_re(output_dir, execute_date = None, few_shot: bool = True):
@@ -218,7 +236,7 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
             df_output_list.append(pd.DataFrame(output_rows_by_note))
         except Exception as e:
             logging.error(f'Error merging output files for evaluation: \n{e}\n')
-            logging.info(f'Error occrred file: {output}')
+            logging.error(f'Error occrred file: {output}')
         
     df_original = pd.concat(df_original_list, ignore_index = True) # (175,7)
     df_output = pd.concat(df_output_list, ignore_index = True) # (128,7)
@@ -269,7 +287,7 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
     logging.info(f'macro precision: {macro_precision}')
     logging.info(f'macro recall: {macro_recall}')
     logging.info(f'macro f1: {macro_f1}')
-    return micro_precision, micro_recall, micro_f1, macro_precision, macro_recall, macro_f1
+    return merged_df
     
 def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
     '''
@@ -318,42 +336,51 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
             gpt_output = f.read()
         # Replace unescpated special characters
         gpt_output = gpt_output.replaces('&', '&amp;')
+        # Remove incomplete lines
+        lines = gpt_output.strip().split('\n')
+        lines = [line for line in lines if all(keyword in line for keyword in ('toText', 'fromText', 'type'))]
+        gpt_output = '\n'.join(lines)
+        gpt_output = '<TAGS>\n' + gpt_output + '\n</TAGS>'
         
         ## Process original list
         original_root = ET.fromstring(gold)
         original_rows_by_note = []
         # Append by individual note
-        for tlink in original_root.findall("TLINK"):
-            row = {
-                'noteID': os.path.splitext(os.path.basename(original))[0],
-                'id': tlink.get('id'),
-                'fromID': tlink.get('fromID'),
-                'fromText': tlink.get('fromText'),
-                'toID': tlink.get('toID'),
-                'toText': tlink.get('toText'),
-                'type': tlink.get('type')
-            }
-            original_rows_by_note.append(row)
-        # Append by whole corpus
-        df_original_list.append(pd.DataFrame(original_rows_by_note))
-        
-        ## Process output list
-        output_root = ET.fromstring(gpt_output)
-        output_rows_by_note = []
-        # Append by individual notes
-        for tlink in output_root.findall("TLINK"):
-            row = {
-                'noteID': os.path.splitext(os.path.basename(output))[0],
-                'id': tlink.get('id'),
-                'fromID': tlink.get('fromID'),
-                'fromText': tlink.get('fromText'),
-                'toID': tlink.get('toID'),
-                'toText': tlink.get('toText'),
-                'type': tlink.get('type')
-            }
-            output_rows_by_note.append(row)
-        # Append by whole corpus
-        df_output_list.append(pd.DataFrame(output_rows_by_note))
+        try:
+            for tlink in original_root.findall("TLINK"):
+                row = {
+                    'noteID': os.path.splitext(os.path.basename(original))[0],
+                    'id': tlink.get('id'),
+                    'fromID': tlink.get('fromID'),
+                    'fromText': tlink.get('fromText'),
+                    'toID': tlink.get('toID'),
+                    'toText': tlink.get('toText'),
+                    'type': tlink.get('type')
+                }
+                original_rows_by_note.append(row)
+            # Append by whole corpus
+            df_original_list.append(pd.DataFrame(original_rows_by_note))
+            
+            ## Process output list
+            output_root = ET.fromstring(gpt_output)
+            output_rows_by_note = []
+            # Append by individual notes
+            for tlink in output_root.findall("TLINK"):
+                row = {
+                    'noteID': os.path.splitext(os.path.basename(output))[0],
+                    'id': tlink.get('id'),
+                    'fromID': tlink.get('fromID'),
+                    'fromText': tlink.get('fromText'),
+                    'toID': tlink.get('toID'),
+                    'toText': tlink.get('toText'),
+                    'type': tlink.get('type')
+                }
+                output_rows_by_note.append(row)
+            # Append by whole corpus
+            df_output_list.append(pd.DataFrame(output_rows_by_note))
+        except Exception as e:
+            logging.error(f'error merging output files for evaluation: \n{e}\n')
+            logging.error(f'error occurred file: {output}')
         
     df_original = pd.concat(df_original_list, ignore_index=True)
     df_output = pd.concat(df_output_list, ignore_index=True)
@@ -370,9 +397,11 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
     micro_recall = TP / (TP + FN) if TP + FN != 0 else 0
     micro_f1 = (2 * micro_precision * micro_recall) / (micro_precision + micro_recall) if micro_precision + micro_recall != 0 else 0
 
-    # print("Micro-Precision:", micro_precision)
-    # print("Micro-Recall:", micro_recall)
-    # print("Micro-F1:", micro_f1)
+    logging.info(f'Performance of end-to-end temporal relation extraction:\n{path}')
+    logging.info(f'================================')
+    logging.info(f'micro-precission: {micro_precision}')
+    logging.info(f'micro-recall: {micro_recall}')
+    logging.info(f'micro-f1: {micro_f1}')
 
     # For macro-average, we need to calculate metrics for each 'type' and then average them
     types = df_original['type'].unique().tolist() + df_output['type'].unique().tolist()
@@ -397,8 +426,7 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
     macro_recall = sum(macro_recall_list) / len(macro_recall_list)
     macro_f1 = sum(macro_f1_list) / len(macro_f1_list)
 
-    # print("\nMacro-Precision:", macro_precision)
-    # print("Macro-Recall:", macro_recall)
-    # print("Macro-F1:", macro_f1)
-
-    return micro_precision, micro_recall, micro_f1, macro_precision, macro_recall, macro_f1
+    logging.info(f'macro precision: {macro_precision}')
+    logging.info(f'macro recall: {macro_recall}')
+    logging.info(f'macro f1: {macro_f1}')
+    return merged_df
