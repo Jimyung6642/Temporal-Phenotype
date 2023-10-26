@@ -1,5 +1,6 @@
 import openai
 import configparser
+import logging
 
 import tqdm as td
 import os, glob
@@ -40,9 +41,10 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
         few_user = config['RE']['few_user']
         few_assistant = config['NER']['few_assistant']
         
+        logging.ingo(f'start API reqeusts...')
         for note in td.tqdm(notes, desc = "Generating NER output from i2b2", unit = "files"):
             if os.path.exists(os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')):
-                print('output exists %s' % os.path.splitext(os.path.basename(note))[0])
+                logging.info('output exists: %s' % note)
             else:
                 with open(note, 'r') as f:
                     content = f.read()
@@ -51,7 +53,8 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:
                     try:
-                        print(f"starting {api_no}th API calling...")
+                        if not api_no == 1:
+                            logging.info(f'{api_no}th API re-requests...')
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -66,8 +69,8 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        print(f"{api_no}th API error: \n{e}\n")
-                        print(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
+                        logging.info(f"susepnding 30 secs to avoid max retries...")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -83,14 +86,15 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding='utf-8') as f:
                         f.write(response)
                 else: 
-                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
                     
     else: # zero_shot
         system_msg = config['NER']['zero_promt']
         
+        logging.info(f'start API reqeusts...')
         for note in td.tqdm(notes, desc = "Generating NER output from i2b2", unit = "files"):
             if os.path.exists(os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')):
-                print('output exists: %s' % os.path.splitext(os.path.basename(note))[0])
+                logging.info('output exists: %s' % note)
             else:
                 with open(note, 'r') as f:
                     content = f.read()
@@ -98,7 +102,8 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:    
                     try:
-                        print(f"starting {api_no}th API calling...")
+                        if not api_no == 1:
+                            logging.info(f'{api_no}th API re-requests...')
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -111,8 +116,8 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        print(f"Error: {e}\n {api_no}th API re-call")
-                        print(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
+                        logging.info(f"susepnding 30 secs to avoid max retries...")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -127,7 +132,7 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding = 'utf-8') as f:
                         f.write(response)
                 else: 
-                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.ingo(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
     
 
 def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
@@ -162,9 +167,10 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
         few_user = config['RE']['few_user']
         few_assistant = config['RE']['few_assistant']
         
+        logging.info(f'start API requests...')
         for note in td.tqdm(notes, desc="Generating RE output from i2b2", unit="files"):
             if os.path.exists(os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')):
-                print('output exists: %s' % os.path.splitext(os.path.basename(note))[0])
+                logging.info('output exists: %s' % note)
             else:
                 with open(note, 'r') as f:
                     content = f.read()
@@ -172,6 +178,8 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:
                     try:
+                        if not api_no == 1:
+                            logging.info(f'{api_no}th API re-requests...')
                         print(f"starting {api_no}th API calling...")
                         completions = openai.ChatCompletion.create(
                             model = model,
@@ -187,8 +195,8 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        print(f"Error: {e}\n {api_no}th API re-call")
-                        print(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
+                        logging.info(f"susepnding 30 secs to avoid max retries...")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -204,14 +212,15 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding='utf-8') as f:
                         f.write(response)
                 else: 
-                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
         
     else:
         system_msg = config['RE']['zero_prompt']
         
+        logging.info(f'start API requests...')
         for note in td.tqdm(notes, desc="Generating RE output from i2b2", unit="files"):
             if os.path.exists(os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')):
-                print('output exists: %s' % os.path.splitext(os.path.basename(note))[0])
+                logging.info('output exists: %s' % note)
             else:
                 with open(note, 'r') as f:
                     content = f.read()
@@ -220,7 +229,8 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:
                     try:
-                        print(f"starting {api_no}th API calling...")
+                        if not api_no == 1:
+                            logging.info(f'{api_no}th API re-requests...')
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -233,8 +243,8 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        print(f"Error: {e}\n {api_no}th API re-call")                      
-                        print(f"susepnding 30 secs to avoid max retries...")  
+                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
+                        logging.info(f"susepnding 30 secs to avoid max retries...")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -249,7 +259,7 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding='utf-8') as f:
                         f.write(response)
                 else: 
-                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
 
 def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
     '''
@@ -283,9 +293,10 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
         few_user = config['NERRE']['few_user']
         few_assistant = config['NERRE']['few_assistant']
         
-        for note in td.tqdm(notes, desc="Generating NERRE output from i2b2", unit="files"):
+        logging.info(f'start API requests...')
+        for note in td.tqdm(notes, desc="Generating NER-RE output from i2b2", unit="files"):
             if os.path.exists(os.path.join(path, os.path.splitext(os.path.basename(note))[0] + ".xml")):
-                print("output exists: %s" % os.path.splitext(os.path.basename(note))[0])
+                logging.info("output exists: %s" % note)
             else:
                 with open(note, 'r') as f:
                     content = f.read()
@@ -293,7 +304,8 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:
                     try:
-                        print(f"starting {api_no}th API calling...")
+                        if not api_no == 1:
+                            logging.info(f'{api_no}th API re-requests...')
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -308,8 +320,8 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        print(f"Error: {e}\n {api_no}th API re-call")
-                        print(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
+                        logging.info(f"susepnding 30 secs to avoid max retries...")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -325,14 +337,15 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding = 'utf-8') as f:
                         f.write(response)
                 else: 
-                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
     
     else:
         system_msg = config['NERRE']['zero_prompt']
         
+        logging.info(f'start API requests...')
         for note in td.tqdm(notes, desc="Generating NERRE output from i2b2", unit = "files"):
             if os.path.exists(os.path.join(path, os.path.splitext(os.path.basename(note))[0] + '.xml')):
-                print('output exists: %s' % os.path.splitext(os.path.basename(note))[0])
+                logging.info('output exists: %s' % note)
             else:
                 with open(note, 'r') as f:
                     content = f.read()
@@ -340,7 +353,8 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                 api_no = 1
                 while api_no < api_retry:
                     try:
-                        print(f"starting {api_no}th API calling...")
+                        if not api_no == 1:
+                            logging.info(f'{api_no}th API re-requests...')
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
@@ -353,8 +367,8 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        print(f"Error: {e}\n {api_no}th API re-call")
-                        print(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
+                        logging.info(f"susepnding 30 secs to avoid max retries...")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -369,4 +383,4 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding='utf-8') as f:
                         f.write(response)
                 else: 
-                    print(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
