@@ -32,17 +32,39 @@ def generate_input_data(input_dir, output_dir):
         path = os.path.join(output_dir, subdir)
         if not os.path.exists(path):
             os.makedirs(path)
-    train_files = glob.glob(os.path.join(input_dir, 'train/*.txt'))
-    test_files = glob.glob(os.path.join(input_dir, 'test/*.txt'))
+    train_files = glob.glob(os.path.join(input_dir, 'train/*.xml'))
+    test_files = glob.glob(os.path.join(input_dir, 'test/*.xml'))
     xml_files = train_files + test_files
         
     ### Generate NER input data
     for xml_file in td.tqdm(xml_files, desc="Generating NER input data", unit="file"):
-        shutil.copy(xml_file, os.path.join(output_dir, 'data/ner'))
+        with open(xml_file, 'rb') as f:
+            rawdata = f.read()
+        encoding = chardet.detect(rawdata)['encoding']
+        xml_data = rawdata.decode(encoding)
+        xml_data = xml_data.replace('&', '&amp;')
+        
+        root = ET.fromstring(xml_data)
+        i2b2 = root.find('TEXT').text
+        
+        output_file = os.path.join(os.path.join(output_dir, 'data/ner'), os.path.splitext(os.path.basename(xml_file))[0] + '.txt')
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(i2b2)
      
     ### Generate NER-RE input data
     for xml_file in td.tqdm(xml_files, desc="Generating NER-RE input data", unit="file"):
-        shutil.copy(xml_file, os.path.join(output_dir, 'data/nerre'))
+        with open(xml_file, 'rb') as f:
+            rawdata = f.read()
+        encoding = chardet.detect(rawdata)['encoding']
+        xml_data = rawdata.decode(encoding)
+        xml_data = xml_data.replace('&', '&amp;')
+        
+        root = ET.fromstring(xml_data)
+        i2b2 = root.find('TEXT').text
+        
+        output_file = os.path.join(os.path.join(output_dir, 'data/nerre'), os.path.splitext(os.path.basename(xml_file))[0] + '.txt')
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(i2b2)
 
     ### Generate RE input data
     train_files = glob.glob(os.path.join(input_dir, 'train/*.xml'))
