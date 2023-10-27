@@ -180,7 +180,6 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     try:
                         if not api_no == 1:
                             logging.info(f'{api_no}th API re-requests...')
-                        print(f"starting {api_no}th API calling...")
                         completions = openai.ChatCompletion.create(
                             model = model,
                             temperature = temp,
