@@ -39,7 +39,7 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
         else:
             date_path = "output_zero_" + model + "_" + execute_date + "/ner"
     path = os.path.join(output_dir, date_path)
-    output_files = glob.glob(os.path.join(path, ".xml"))
+    output_files = glob.glob(os.path.join(path, "*.xml"))
     
     ### Calculate metrics
     # preprocess
@@ -52,12 +52,20 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
             gpt_output = f.read()
         
         # Replace unescaped special characters
-        gpt_output = gpt_output.replace('&', '&amp;')
-        # Remove incomplete lines
+        gpt_output = gpt_output.replace('&', '&amp;')        
+        # Remove lines without text/type entities
         lines = gpt_output.strip().split('\n')
         lines = [line for line in lines if all(keyword in line for keyword in ('text', 'type'))]
         gpt_output = '\n'.join(lines)
-        gpt_output = '<TAGS>\n' + gpt_output + '\n</TAGS>'
+        # Use regex to find the text attribute and then apply the replacement function
+        gpt_output = re.sub(r'text="([^"]*)"', 
+                            lambda match: 'text="' + match.group(1).replace('<', '&lt;').replace('>', '&gt;') + '"',
+                            gpt_output)
+        # Remove incomplete lines
+        pattern = r'<EVENT[^>]*\/>'
+        matches = re.findall(pattern, gpt_output) 
+        gpt_output = '<TAGS>\n' + '\n'.join(matches) + '\n</TAGS>'
+        
         # Process original list
         original_root = ET.fromstring(gold)
         original_rows_by_note = []
@@ -65,7 +73,7 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
         try:
             for event in original_root.findall("EVENT"):
                 row = {
-                    'noteID': os.path.splitext(os.path.base),
+                    'noteID': os.path.splitext(os.path.basename(original))[0],
                     'id': event.get('id'),
                     'start': event.get('start'),
                     'end': event.get('end'),
@@ -194,9 +202,12 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
         lines = gpt_output.strip().split('\n')
         lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
         gpt_output = '\n'.join(lines)
-        gpt_output = '<TAGS>\n' + gpt_output + '\n</TAGS>'
         # Remove xml tags in text snippet
         gpt_output = re.sub(r'(<EVENT.*?/EVENT>)|(<TIMEX.*?/TIMEX>)|(<EVENT|<TIMEX|</EVENT>|</TIMEX>)', '', gpt_output)
+        # Remove complete lines
+        pattern = r'<TLINK[^>]*\/>'
+        matches = re.findall(pattern, gpt_output)
+        gpt_output = '<TAGS>\n' + '\n'.join(matches) + '\n</TAGS>'
         
         ## Process original list
         original_root = ET.fromstring(gold)
@@ -334,13 +345,26 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
             gold = f.read()
         with open(output, 'r') as f:
             gpt_output = f.read()
-        # Replace unescpated special characters
-        gpt_output = gpt_output.replaces('&', '&amp;')
+        
+        # Replace unescaped special characters
+        gpt_output = gpt_output.replace('&', '&amp;')
         # Remove incomplete lines
         lines = gpt_output.strip().split('\n')
-        lines = [line for line in lines if all(keyword in line for keyword in ('toText', 'fromText', 'type'))]
+        lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
         gpt_output = '\n'.join(lines)
-        gpt_output = '<TAGS>\n' + gpt_output + '\n</TAGS>'
+        # Remove xml tags in text snippet
+        gpt_output = re.sub(r'(<EVENT.*?/EVENT>)|(<TIMEX.*?/TIMEX>)|(<EVENT|<TIMEX|</EVENT>|</TIMEX>)', '', gpt_output)
+        # Use regex to find the fromText/toText attributes and then apply the replacement function
+        gpt_output = re.sub(r'fromText="([^"]*)"', 
+                            lambda match: 'fromText="' + match.group(1).replace('<', '&lt;').replace('>', '&gt;') + '"',
+                            gpt_output)
+        gpt_output = re.sub(r'toText="([^"]*)"', 
+                            lambda match: 'tpText="' + match.group(1).replace('<', '&lt;').replace('>', '&gt;') + '"', 
+                            gpt_output)
+        # Remove complete lines
+        pattern = r'<TLINK[^>]*\/>'
+        matches = re.findall(pattern, gpt_output)
+        gpt_output = '<TAGS>\n' + '\n'.join(matches) + '\n</TAGS>'
         
         ## Process original list
         original_root = ET.fromstring(gold)
