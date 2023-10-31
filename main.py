@@ -59,17 +59,19 @@ if __name__ == "__main__":
         ## NER
         # few shot
         logger.info('============================================================')
+        logger.info('start API request')
+        logger.info('============================================================')        
         try:
-            logger.info(f'start few-shot ner...')
+            logger.info(f'start one-shot ner...')
             run_ner(output_dir, few_shot = True, api_retry=6)
-            logger.info(f'done few-shot ner')
+            logger.info(f'done one-shot ner')
         except Exception as e:
             logger.info(f'error occurred while running few-shot ner: {e}')
         # zero shot
         try:
-            logger.info(f'start one-shot ner...')
+            logger.info(f'start zero-shot ner...')
             run_ner(output_dir, few_shot = False, api_retry=6)
-            logger.info(f'done one-shot ner')
+            logger.info(f'done zero-shot ner')
         except Exception as e:
             logger.info(f'error occurred while running one-shot ner: {e}')
         ## tRE
@@ -105,28 +107,32 @@ if __name__ == "__main__":
         
         # Evaluate GPT output
         logger.info('============================================================')
+        logger.info('start model evaluation')
+        logger.info('============================================================')
         config = configparser.ConfigParser()
         config.read(os.path.join(os.getcwd(), "api.config"))
         model = config['openai']['model']
-        one_basic_path = "output_" + "one_" + config['openai']['model'] + '_' + date.today().strftime("%y%m%d")
-        zero_basic_path = "output_" + "zero_" + config['openai']['model'] + '_' + date.today().strftime("%y%m%d")
+        # one_basic_path = "output_" + "one_" + config['openai']['model'] + '_' + date.today().strftime("%y%m%d")
+        # zero_basic_path = "output_" + "zero_" + config['openai']['model'] + '_' + date.today().strftime("%y%m%d")
+        one_basic_path = "output_" + "one_" + config['openai']['model'] + '_' + '231027'
+        zero_basic_path = "output_" + "zero_" + config['openai']['model'] + '_' + '231027'        
         
         # one-shot ner
         if os.path.exists(os.path.join(output_dir, one_basic_path, 'ner')):
-            logger.info('evaluate one-shot ner output')
+            logger.info('evaluate one-shot ner output...')
             try:
-                eval_df = eval_ner(output_dir, few_shot=True, execute_date = None)
+                eval_df = eval_ner(output_dir, few_shot=True, execute_date = None)   
                 eval_df.to_csv(os.path.join(output_dir, one_basic_path, 'ner_one_df.csv'), index=False)
             except Exception as e:
                 logger.error(f'error occurred while evaluating one-shot ner: \n{e}')
         else:
-            logger.info(f'pass evaluating one-shot ner')
+            logger.info(f'pass evaluating one-shot ner...')
         # zero-shot ner
         if os.path.exists(os.path.join(output_dir, zero_basic_path, 'ner')):
             logger.info('evaluate zero-shot ner output')
             try:
                 eval_df = eval_ner(output_dir, few_shot=False, execute_date = None)
-                eval_df.to_csv(os.path.join(output_dir, one_basic_path, 'ner_zero_df.csv'), index=False)
+                eval_df.to_csv(os.path.join(output_dir, zero_basic_path, 'ner_zero_df.csv'), index=False)
             except Exception as e:
                 logger.error(f'error occurred while evaluting zero-shot ner: \n{e}')
         else:
@@ -136,7 +142,7 @@ if __name__ == "__main__":
         if os.path.exists(os.path.join(output_dir, one_basic_path, 're')):
             logger.info('evaluate one-shot tre output')
             try:
-                eval_df = eval_re(output_dir, few_shot=True, execute_date = None)
+                eval_df = eval_re(output_dir, few_shot=True, execute_date = '231027')
                 eval_df.to_csv(os.path.join(output_dir, one_basic_path, 're_one_df.csv'), index=False)
             except Exception as e:
                 logger.error(f'error occurred while evaluating one-shot tre: \n{e}')
