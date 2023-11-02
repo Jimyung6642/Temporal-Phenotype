@@ -201,7 +201,7 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
 
     # Iterate over each row in the gold standard dataframe
     # This approach might be too slow but better for memory-saving
-    for index, gold_row in td.tqdm(df_original.iterrows(), desc='Calculating TP/FN for exact macro metrics...', total=df_original.shape[0]):
+    for index, gold_row in td.tqdm(df_original.iterrows(), desc='Calculating TP/FN for relax macro metrics...', total=df_original.shape[0]):
         # Find any matching annotations in the model's output
         matches = df_output.apply(lambda model_row: is_relax_macro_match(
             gold_row['start'], gold_row['end'], gold_row['text'], gold_row['type'],
@@ -215,7 +215,7 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
             FN += 1
 
     # Any annotation in the model's output that doesn't match with the gold standard is a FP
-    for index, model_row in td.tqdm(df_output.iterrows(), desc='Calculating FP for exact macro metrics...', total=df_output.shape[0]):
+    for index, model_row in td.tqdm(df_output.iterrows(), desc='Calculating FP for relax macro metrics...', total=df_output.shape[0]):
         matches = df_original.apply(lambda gold_row: is_relax_macro_match(
             gold_row['start'], gold_row['end'], gold_row['text'], gold_row['type'],
             model_row['start'], model_row['end'], model_row['text'], model_row['type']
