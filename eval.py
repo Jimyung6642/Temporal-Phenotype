@@ -20,6 +20,11 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
     TP - correctly match all start, text and type.
     FP - Model identifies the entity not in gold standard (wrong text or correct text with different start point)
     FN - Entity exists in gold standard, but not in model result OR text is correct but type is different
+    
+    Relax match: found text span match
+    TP - (gold standard start < model start < gold standard end) & (gold standard start < model end)
+      |- (model start < gold standard start) & (gold standard < model end)
+    FP & FN - same as strict match    
     '''
     # Read gold standard data
     original_files = glob.glob(os.path.join(output_dir, 'eval/ner', '*.xml'))
@@ -107,50 +112,179 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
     df_original = pd.concat(df_original_list, ignore_index = True)
     df_output = pd.concat(df_output_list, ignore_index = True)
     
-    merged_df = df_original.merge(df_output, on = ['start','text','type'], how = 'outer', indicator = True)
+    ### Calculate precision, recall, and f1-score
+    merged_df = df_original.merge(df_output, on = ['start', 'end', 'text', 'type'], how = 'outer', indicator = True)
     
     TP = len(merged_df[merged_df['_merge'] == 'both'])
     FP = len(merged_df[merged_df['_merge'] == 'right_only'])
     FN = len(merged_df[merged_df['_merge'] == 'left_only'])
-    
-    ### Calculate precision, recall, and f1-score
-    # Micro-averaged metrics
+
+    ## Exact micro metrics
     micro_precision = TP / (TP + FP) if TP + FP != 0 else 0
     micro_recall = TP / (TP + FN) if TP + FN != 0 else 0
     micro_f1 = (2 * micro_precision * micro_recall) / (micro_precision + micro_recall) if micro_precision + micro_recall != 0 else 0
 
     logging.info(f'Performance of named entity recognition:\n{path}')
     logging.info(f'================================')
-    logging.info(f'micro-precission: {micro_precision}')
-    logging.info(f'micro-recall: {micro_recall}')
-    logging.info(f'micro-f1: {micro_f1}')
+    logging.info(f'Overall exact match micro metrics...')
+    logging.info(f'exact match micro-precission: {round(micro_precision, 3)}')
+    logging.info(f'exact match micro-recall: {round(micro_recall, 3)}')
+    logging.info(f'exact match micro-f1: {round(micro_f1, 3)}')
+
+    # Define a function to check for an exact match across all fields
+    def is_exact_match(row, df_to_compare, type):
+        # Filter the comparison dataframe for the current type
+        df_filtered = df_to_compare[df_to_compare['type'] == type]
+        # Check if there's any row in the filtered dataframe that matches all criteria
+        return any(
+            (df_filtered['start'] == row['start']) &
+            (df_filtered['end'] == row['end']) &
+            (df_filtered['text'] == row['text']) &
+            (df_filtered['type'] == row['type'])
+        )
 
     # For macro-average, we need to calculate metrics for each 'type' and then average them
-    types = df_original['type'].unique().tolist() + df_output['type'].unique().tolist()
+    # types = df_original['type'].unique().tolist() + df_output['type'].unique().tolist()
+    types = df_original['type'].unique().tolist()
     types = list(set(types))  # get unique types
-
+    
+    # Initialize lists to hold the precision, recall, and F1 for each type
     macro_precision_list, macro_recall_list, macro_f1_list = [], [], []
 
+    # Iterate over each unique type
     for t in types:
-        TP_t = len(merged_df[(merged_df['type'] == t) & (merged_df['_merge'] == 'both')])
-        FP_t = len(merged_df[(merged_df['type'] == t) & (merged_df['_merge'] == 'right_only')])
-        FN_t = len(merged_df[(merged_df['type'] == t) & (merged_df['_merge'] == 'left_only')])
+        # Calculate TP, FP, and FN for each type
+        TP_t = sum(df_original[df_original['type'] == t].apply(is_exact_match, axis=1, df_to_compare=df_output, type=t))
+        FP_t = sum(df_output[df_output['type'] == t].apply(is_exact_match, axis=1, df_to_compare=df_original, type=t))
+        FN_t = len(df_original[(df_original['type'] == t)]) - TP_t
         
+        # Calculate precision, recall, and F1 for each type
         precision_t = TP_t / (TP_t + FP_t) if TP_t + FP_t != 0 else 0
         recall_t = TP_t / (TP_t + FN_t) if TP_t + FN_t != 0 else 0
-        f1_t = (2 * precision_t * recall_t) / (precision_t + recall_t) if precision_t + recall_t != 0 else 0
+        f1_t = 2 * precision_t * recall_t / (precision_t + recall_t) if precision_t + recall_t != 0 else 0
         
+        # Append the metrics to their respective lists
         macro_precision_list.append(precision_t)
         macro_recall_list.append(recall_t)
         macro_f1_list.append(f1_t)
+        
+        logging.info(f'Exact macro relation type: {t}...')
+        logging.info(f'exact match macro precision: {round(precision_t, 3)}')
+        logging.info(f'exact match macro recall: {round(recall_t, 3)}')
+        logging.info(f'exact match macro f1-score: {round(f1_t, 3)}')
 
+    # Calculate the macro-averaged metrics
     macro_precision = sum(macro_precision_list) / len(macro_precision_list)
     macro_recall = sum(macro_recall_list) / len(macro_recall_list)
     macro_f1 = sum(macro_f1_list) / len(macro_f1_list)
     
-    logging.info(f'macro precision: {macro_precision}')
-    logging.info(f'macro recall: {macro_recall}')
-    logging.info(f'macro f1: {macro_f1}')
+    logging.info(f'Overall exact macro performance...')
+    logging.info(f'exact match macro precision: {round(macro_precision, 3)}')
+    logging.info(f'exact match macro recall: {round(macro_recall, 3)}')
+    logging.info(f'exact match macro f1-score: {round(macro_f1, 3)}')
+    
+    ## Relax match
+    # macro metrics
+    # Define a function to check for overlap and text match
+    def is_relax_macro_match(gold_start, gold_end, gold_text, gold_type, model_start, model_end, model_text, model_type):
+        # Check for the two overlap conditions you've described
+        condition1 = (gold_start < model_start < gold_end) and (gold_start < model_end)
+        condition2 = (model_start < gold_start) and (gold_start < model_end)
+        # Check for text and type match
+        text_type_match = (gold_text == model_text) and (gold_type == model_type)
+        return (condition1 or condition2) and text_type_match
+
+    # Initialize counts
+    TP = 0
+    FP = 0
+    FN = 0
+
+    # Iterate over each row in the gold standard dataframe
+    # This approach might be too slow but better for memory-saving
+    for index, gold_row in td.tqdm(df_original.iterrows(), desc='Calculating TP/FN for exact macro metrics...', total=df_original.shape[0]):
+        # Find any matching annotations in the model's output
+        matches = df_output.apply(lambda model_row: is_relax_macro_match(
+            gold_row['start'], gold_row['end'], gold_row['text'], gold_row['type'],
+            model_row['start'], model_row['end'], model_row['text'], model_row['type']
+        ), axis=1)
+        
+        # If there's at least one match, it's a TP; otherwise, it's an FN
+        if matches.any():
+            TP += 1
+        else:
+            FN += 1
+
+    # Any annotation in the model's output that doesn't match with the gold standard is a FP
+    for index, model_row in td.tqdm(df_output.iterrows(), desc='Calculating FP for exact macro metrics...', total=df_output.shape[0]):
+        matches = df_original.apply(lambda gold_row: is_relax_macro_match(
+            gold_row['start'], gold_row['end'], gold_row['text'], gold_row['type'],
+            model_row['start'], model_row['end'], model_row['text'], model_row['type']
+        ), axis=1)
+        
+        # If there's no match, it's a FP
+        if not matches.any():
+            FP += 1
+
+    # Micro-averaged metrics
+    relax_micro_precision = TP / (TP + FP) if TP + FP != 0 else 0
+    relax_micro_recall = TP / (TP + FN) if TP + FN != 0 else 0
+    relax_micro_f1 = (2 * micro_precision * micro_recall) / (micro_precision + micro_recall) if micro_precision + micro_recall != 0 else 0
+
+    logging.info(f'Overall relax match micro metrics...')
+    logging.info(f'relax match micro-precission: {round(relax_micro_precision, 3)}')
+    logging.info(f'relax match micro-recall: {round(relax_micro_recall, 3)}')
+    logging.info(f'relax match micro-f1: {round(relax_micro_f1, 3)}')
+    
+    # Define a function to check for a relaxed match
+    def is_relaxed_micro_match(gold_row, model_row):
+        # Check for the two overlap conditions you've described
+        condition1 = (gold_row['start'] < model_row['start'] < gold_row['end']) and (gold_row['start'] < model_row['end'])
+        condition2 = (model_row['start'] < gold_row['start']) and (gold_row['start'] < model_row['end'])
+        # Check for text and type match
+        text_type_match = (gold_row['text'] == model_row['text']) and (gold_row['type'] == model_row['type'])
+        return (condition1 or condition2) and text_type_match
+
+    # Initialize lists to hold the precision, recall, and F1 for each type
+    macro_precision_list, macro_recall_list, macro_f1_list = [], [], []
+
+    # Iterate over each unique type
+    for t in types:
+        # Filter the dataframes for the current type
+        df_original_type = df_original[df_original['type'] == t]
+        df_output_type = df_output[df_output['type'] == t]
+
+        # Calculate TP, FP, and FN for each type using relaxed match
+        TP_t = sum(df_output_type.apply(lambda model_row: df_original_type.apply(lambda gold_row: is_relaxed_micro_match(gold_row, model_row), axis=1).any(), axis=1))
+        FN_t = sum(df_original_type.apply(lambda gold_row: not df_output_type.apply(lambda model_row: is_relaxed_micro_match(gold_row, model_row), axis=1).any(), axis=1))
+        FP_t = sum(df_output_type.apply(lambda model_row: not df_original_type.apply(lambda gold_row: is_relaxed_micro_match(gold_row, model_row), axis=1).any(), axis=1))
+
+        # Calculate precision, recall, and F1 for each type
+        precision_t = TP_t / (TP_t + FP_t) if TP_t + FP_t != 0 else 0
+        recall_t = TP_t / (TP_t + FN_t) if TP_t + FN_t != 0 else 0
+        f1_t = 2 * precision_t * recall_t / (precision_t + recall_t) if precision_t + recall_t != 0 else 0
+        
+        # Append the metrics to their respective lists
+        macro_precision_list.append(precision_t)
+        macro_recall_list.append(recall_t)
+        macro_f1_list.append(f1_t)
+
+        # Print the metrics for the current type
+        logging.info(f"Relax macro relation type: {t}...")
+        logging.info(f"relax match macro precision: {round(precision_t, 3)}")
+        logging.info(f"relax match macro recall: {round(recall_t, 3)}")
+        logging.info(f"relax match macro f1-score: {round(f1_t, 3)}\n")
+
+    # Calculate the macro-averaged metrics
+    relax_macro_precision = sum(macro_precision_list) / len(macro_precision_list)
+    relax_macro_recall = sum(macro_recall_list) / len(macro_recall_list)
+    relax_macro_f1 = sum(macro_f1_list) / len(macro_f1_list)
+
+    # Output the macro-averaged metrics
+    logging.info(f"Overall relax macro performance...")
+    logging.info(f"relax match macro precision: {round(relax_macro_precision, 3)}")
+    logging.info(f"relax match macro recall: {round(relax_macro_recall, 3)}")
+    logging.info(f"relax match macro f1-score: {round(relax_macro_f1, 3)}")
+    
     return merged_df
 
 
@@ -290,11 +424,17 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
         macro_precision_list.append(precision_t)
         macro_recall_list.append(recall_t)
         macro_f1_list.append(f1_t)
+        
+        logging.info(f'Relation type: {t}...')
+        logging.info(f'macro precision: {precision_t}...')
+        logging.info(f'macro recall: {recall_t}...')
+        logging.info(f'macro f1-score: {f1_t}')
 
     macro_precision = sum(macro_precision_list) / len(macro_precision_list)
     macro_recall = sum(macro_recall_list) / len(macro_recall_list)
     macro_f1 = sum(macro_f1_list) / len(macro_f1_list)
 
+    logging.info(f'Overall macro performance...')
     logging.info(f'macro precision: {macro_precision}')
     logging.info(f'macro recall: {macro_recall}')
     logging.info(f'macro f1: {macro_f1}')
@@ -350,7 +490,7 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
         gpt_output = gpt_output.replace('&', '&amp;')
         # Remove incomplete lines
         lines = gpt_output.strip().split('\n')
-        lines = [line for line in lines if all(keyword in line for keyword in ('toID', 'fromID', 'type'))]
+        lines = [line for line in lines if all(keyword in line for keyword in ('toText', 'fromText', 'type'))]
         gpt_output = '\n'.join(lines)
         # Remove xml tags in text snippet
         gpt_output = re.sub(r'(<EVENT.*?/EVENT>)|(<TIMEX.*?/TIMEX>)|(<EVENT|<TIMEX|</EVENT>|</TIMEX>)', '', gpt_output)
@@ -445,11 +585,17 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
         macro_precision_list.append(precision_t)
         macro_recall_list.append(recall_t)
         macro_f1_list.append(f1_t)
+        
+        logging.info(f'Relation type: {t}...')
+        logging.info(f'macro precision: {precision_t}')
+        logging.info(f'macro recall: {recall_t}')
+        logging.info(f'macro f1-score: {f1_t}')
 
     macro_precision = sum(macro_precision_list) / len(macro_precision_list)
     macro_recall = sum(macro_recall_list) / len(macro_recall_list)
     macro_f1 = sum(macro_f1_list) / len(macro_f1_list)
 
+    logging.info(f'Overall macro performance...')
     logging.info(f'macro precision: {macro_precision}')
     logging.info(f'macro recall: {macro_recall}')
     logging.info(f'macro f1: {macro_f1}')
