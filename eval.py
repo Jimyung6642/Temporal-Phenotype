@@ -248,6 +248,8 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
     macro_precision_list, macro_recall_list, macro_f1_list = [], [], []
 
     # Iterate over each unique type
+    types = df_original['type'].unique().tolist()
+    types = list(set(types))  # get unique types
     for t in types:
         # Filter the dataframes for the current type
         df_original_type = df_original[df_original['type'] == t]
