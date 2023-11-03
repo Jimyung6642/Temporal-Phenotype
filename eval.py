@@ -260,21 +260,24 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
         FN_t = sum(df_original_type.apply(lambda gold_row: not df_output_type.apply(lambda model_row: is_relaxed_micro_match(gold_row, model_row), axis=1).any(), axis=1))
         FP_t = sum(df_output_type.apply(lambda model_row: not df_original_type.apply(lambda gold_row: is_relaxed_micro_match(gold_row, model_row), axis=1).any(), axis=1))
 
-        # Calculate precision, recall, and F1 for each type
-        precision_t = TP_t / (TP_t + FP_t) if TP_t + FP_t != 0 else 0
-        recall_t = TP_t / (TP_t + FN_t) if TP_t + FN_t != 0 else 0
-        f1_t = 2 * precision_t * recall_t / (precision_t + recall_t) if precision_t + recall_t != 0 else 0
-        
-        # Append the metrics to their respective lists
-        macro_precision_list.append(precision_t)
-        macro_recall_list.append(recall_t)
-        macro_f1_list.append(f1_t)
+        if not TP_t == 0: 
+            # Calculate precision, recall, and F1 for each type
+            precision_t = TP_t / (TP_t + FP_t) if TP_t + FP_t != 0 else 0
+            recall_t = TP_t / (TP_t + FN_t) if TP_t + FN_t != 0 else 0
+            f1_t = 2 * precision_t * recall_t / (precision_t + recall_t) if precision_t + recall_t != 0 else 0
+            
+            # Append the metrics to their respective lists
+            macro_precision_list.append(precision_t)
+            macro_recall_list.append(recall_t)
+            macro_f1_list.append(f1_t)
 
-        # Print the metrics for the current type
-        logging.info(f"Relax macro relation type: {t}...")
-        logging.info(f"relax match macro precision: {round(precision_t, 3)}")
-        logging.info(f"relax match macro recall: {round(recall_t, 3)}")
-        logging.info(f"relax match macro f1-score: {round(f1_t, 3)}\n")
+            # Print the metrics for the current type
+            logging.info(f"Relax macro relation type: {t}...")
+            logging.info(f"relax match macro precision: {round(precision_t, 3)}")
+            logging.info(f"relax match macro recall: {round(recall_t, 3)}")
+            logging.info(f"relax match macro f1-score: {round(f1_t, 3)}\n")
+        else:
+            logging.info(f'passing type: {t} for not having TP')
 
     # Calculate the macro-averaged metrics
     relax_macro_precision = sum(macro_precision_list) / len(macro_precision_list)
@@ -419,18 +422,21 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
         FP_t = len(merged_df[(merged_df['type'] == t) & (merged_df['_merge'] == 'right_only')])
         FN_t = len(merged_df[(merged_df['type'] == t) & (merged_df['_merge'] == 'left_only')])
         
-        precision_t = TP_t / (TP_t + FP_t) if TP_t + FP_t != 0 else 0
-        recall_t = TP_t / (TP_t + FN_t) if TP_t + FN_t != 0 else 0
-        f1_t = (2 * precision_t * recall_t) / (precision_t + recall_t) if precision_t + recall_t != 0 else 0
-        
-        macro_precision_list.append(precision_t)
-        macro_recall_list.append(recall_t)
-        macro_f1_list.append(f1_t)
-        
-        logging.info(f'Relation type: {t}...')
-        logging.info(f'macro precision: {precision_t}...')
-        logging.info(f'macro recall: {recall_t}...')
-        logging.info(f'macro f1-score: {f1_t}')
+        if not TP_t == 0: 
+            precision_t = TP_t / (TP_t + FP_t) if TP_t + FP_t != 0 else 0
+            recall_t = TP_t / (TP_t + FN_t) if TP_t + FN_t != 0 else 0
+            f1_t = (2 * precision_t * recall_t) / (precision_t + recall_t) if precision_t + recall_t != 0 else 0
+            
+            macro_precision_list.append(precision_t)
+            macro_recall_list.append(recall_t)
+            macro_f1_list.append(f1_t)
+            
+            logging.info(f'Relation type: {t}...')
+            logging.info(f'macro precision: {precision_t}...')
+            logging.info(f'macro recall: {recall_t}...')
+            logging.info(f'macro f1-score: {f1_t}')
+        else:
+            logging.info(f'pass type: {t} for not having TP')
 
     macro_precision = sum(macro_precision_list) / len(macro_precision_list)
     macro_recall = sum(macro_recall_list) / len(macro_recall_list)
@@ -445,7 +451,8 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
 def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
     '''
     Get performance of end-to-end approach of the task
-    By comparing gold standard and GPT-generated data, calculate performacne
+    By comparing gold standard and GPT-generated data, calculate performacne.
+    GPT will generate both NER and RE, but we will evaluate the RE performance here since it uses NER information.
     
     execute_date = %y%m%d (string)
     
