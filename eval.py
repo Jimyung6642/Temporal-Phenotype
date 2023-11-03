@@ -407,9 +407,9 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
 
     logging.info(f'Performance of temporal relation extraction:\n{path}')
     logging.info(f'================================')
-    logging.info(f'micro-precission: {micro_precision}')
-    logging.info(f'micro-recall: {micro_recall}')
-    logging.info(f'micro-f1: {micro_f1}')
+    logging.info(f'micro-precission: {round(micro_precision, 3)}')
+    logging.info(f'micro-recall: {round(micro_recall, 3)}')
+    logging.info(f'micro-f1: {round(micro_f1, 3)}')
 
     # For macro-average, we need to calculate metrics for each 'type' and then average them
     types = df_original['type'].unique().tolist() + df_output['type'].unique().tolist()
@@ -432,9 +432,9 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
             macro_f1_list.append(f1_t)
             
             logging.info(f'Relation type: {t}...')
-            logging.info(f'macro precision: {precision_t}...')
-            logging.info(f'macro recall: {recall_t}...')
-            logging.info(f'macro f1-score: {f1_t}')
+            logging.info(f'macro precision: {round(precision_t, 3)}...')
+            logging.info(f'macro recall: {round(recall_t, 3)}...')
+            logging.info(f'macro f1-score: {round(f1_t, 3)}')
         else:
             logging.info(f'pass type: {t} for not having TP')
 
@@ -443,9 +443,9 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
     macro_f1 = sum(macro_f1_list) / len(macro_f1_list)
 
     logging.info(f'Overall macro performance...')
-    logging.info(f'macro precision: {macro_precision}')
-    logging.info(f'macro recall: {macro_recall}')
-    logging.info(f'macro f1: {macro_f1}')
+    logging.info(f'macro precision: {round(macro_precision, 3)}')
+    logging.info(f'macro recall: {round(macro_recall, 3)}')
+    logging.info(f'macro f1: {(round(macro_f1, 3))}')
     return merged_df
     
 def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
@@ -572,9 +572,9 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
 
     logging.info(f'Performance of end-to-end temporal relation extraction:\n{path}')
     logging.info(f'================================')
-    logging.info(f'micro-precission: {micro_precision}')
-    logging.info(f'micro-recall: {micro_recall}')
-    logging.info(f'micro-f1: {micro_f1}')
+    logging.info(f'micro-precission: {round(micro_precision, 3)}')
+    logging.info(f'micro-recall: {round(micro_recall, 3)}')
+    logging.info(f'micro-f1: {round(micro_f1, 3)}')
 
     # For macro-average, we need to calculate metrics for each 'type' and then average them
     types = df_original['type'].unique().tolist() + df_output['type'].unique().tolist()
@@ -596,16 +596,17 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
         macro_f1_list.append(f1_t)
         
         logging.info(f'Relation type: {t}...')
-        logging.info(f'macro precision: {precision_t}')
-        logging.info(f'macro recall: {recall_t}')
-        logging.info(f'macro f1-score: {f1_t}')
+        logging.info(f'macro precision: {round(precision_t, 3)}')
+        logging.info(f'macro recall: {round(recall_t, 3)}')
+        logging.info(f'macro f1-score: {round(f1_t, 3)}')
 
     macro_precision = sum(macro_precision_list) / len(macro_precision_list)
     macro_recall = sum(macro_recall_list) / len(macro_recall_list)
     macro_f1 = sum(macro_f1_list) / len(macro_f1_list)
 
     logging.info(f'Overall macro performance...')
-    logging.info(f'macro precision: {macro_precision}')
-    logging.info(f'macro recall: {macro_recall}')
-    logging.info(f'macro f1: {macro_f1}')
+    logging.info(f'macro precision: {round(macro_precision, 3)}')
+    logging.info(f'macro recall: {round(macro_recall, 3)}')
+    logging.info(f'macro f1: {round(macro_f1, 3)}')
+    
     return merged_df
