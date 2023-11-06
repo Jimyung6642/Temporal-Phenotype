@@ -2,8 +2,9 @@ import os
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as minidom
 
+
 import glob
-import shutil
+import logging
 import tqdm as td
 
 import chardet
@@ -37,6 +38,7 @@ def generate_input_data(input_dir, output_dir):
     xml_files = train_files + test_files
         
     ### Generate NER input data
+    logging.info('Generating NER input data...')
     for xml_file in td.tqdm(xml_files, desc="Generating NER input data", unit="file"):
         with open(xml_file, 'rb') as f:
             rawdata = f.read()
@@ -52,6 +54,7 @@ def generate_input_data(input_dir, output_dir):
             f.write(i2b2)
      
     ### Generate NER-RE input data
+    logging.info('Generating NER-RE input data...')
     for xml_file in td.tqdm(xml_files, desc="Generating NER-RE input data", unit="file"):
         with open(xml_file, 'rb') as f:
             rawdata = f.read()
@@ -67,6 +70,7 @@ def generate_input_data(input_dir, output_dir):
             f.write(i2b2)
 
     ### Generate RE input data
+    logging.info('Generating RE input data...')
     train_files = glob.glob(os.path.join(input_dir, 'train/*.xml'))
     test_files = glob.glob(os.path.join(input_dir, 'test/*.xml'))
     xml_files = train_files + test_files
@@ -85,7 +89,6 @@ def generate_input_data(input_dir, output_dir):
         
         # Extract EVENT and TIMEX3 annotations and sort by start offset
         annotations = []
-        id = 1
         for event in root.findall(".//EVENT"): 
             event_modality = event.attrib.get('modality', '')
             event_polarity = event.attrib.get('polarity', '')
@@ -132,6 +135,7 @@ def generate_eval_data(input_dir, output_dir):
     xml_files = train_files + test_files        
             
     ### Generate NER eval data    
+    logging.info('Generating NER eval data...')
     for xml_file in td.tqdm(xml_files, desc="Generating NER eval data", unit="file"):
         with open(xml_file, 'rb') as f:
             rawdata = f.read()
