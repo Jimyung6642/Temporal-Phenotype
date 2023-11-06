@@ -37,13 +37,13 @@ if __name__ == "__main__":
         output_dir = os.path.join(os.getcwd(), 'result') 
         
         logger.info(f'i2b2 data path: {input_dir}')
-        logger.info(f'output directory path: {output_dir}')
+        logger.info(f'output directory path: {output_dir}\n')
         
         # Generate and transform i2b2 data        
         if not os.path.exists(os.path.join(output_dir, 'data')):
             logger.info('converting i2b2-2012 data for tasks...')
             generate_input_data(input_dir, output_dir)
-            logger.info(f'done converting i2b2-2012')
+            logger.info(f'done converting i2b2-2012\n')
         else:
             logger.info(f'skip convering i2b2 data. data directory already exists in {output_dir}')
         
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         if not os.path.exists(os.path.join(output_dir, 'eval')):
             logger.info(f'generate eval data from i2b2-2012...')
             generate_eval_data(input_dir, output_dir)
-            logger.info(f'done generating eval data')
+            logger.info(f'done generating eval data\n')
         else:
             logger.info(f'skip convering eval data. eval directory already exists in {output_dir}')
         
@@ -64,14 +64,14 @@ if __name__ == "__main__":
         try:
             logger.info(f'start one-shot ner...')
             run_ner(output_dir, few_shot = True, api_retry=6)
-            logger.info(f'done one-shot ner')
+            logger.info(f'done one-shot ner\n')
         except Exception as e:
             logger.info(f'error occurred while running few-shot ner: {e}')
         # zero shot
         try:
             logger.info(f'start zero-shot ner...')
             run_ner(output_dir, few_shot = False, api_retry=6)
-            logger.info(f'done zero-shot ner')
+            logger.info(f'done zero-shot ner\n')
         except Exception as e:
             logger.info(f'error occurred while running one-shot ner: {e}')
         ## tRE
@@ -79,14 +79,14 @@ if __name__ == "__main__":
         try:
             logger.info(f'start one-shot tre...')
             run_re(output_dir, few_shot = True, api_retry=6)
-            logger.info(f'done one-shot tre')
+            logger.info(f'done one-shot tre\n')
         except Exception as e:
             logger.info(f'error occurred while running one-shot tre: {e}')
         # zero shot
         try:
             logger.info(f'start zero-shot tre...')
             run_re(output_dir, few_shot = False, api_retry=6)
-            logger.info(f'done zero-shot tre')
+            logger.info(f'done zero-shot tre\n')
         except Exception as e:
             logger.info(f'error occurred while running zero-shot tre: {e}')
         ## NER-RE
@@ -94,14 +94,14 @@ if __name__ == "__main__":
         try:
             logger.info(f'start one-shot ner-re...')
             run_nerre(output_dir, few_shot = True, api_retry=6)
-            logger.info(f'done one-shot ner-re')
+            logger.info(f'done one-shot ner-re\n')
         except Exception as e:
             logger.info(f'error occurred while running one-shot ner-re: {e}')
         # zero shot
         try:
             logger.info(f'start zero-shot ner-re...')
             run_nerre(output_dir, few_shot = False, api_retry=6)
-            logger.info(f'done zero-shot ner-re')
+            logger.info(f'done zero-shot ner-re\n')
         except Exception as e:
             logger.info(f'error occurred while running zero-shot ner-re: {e}')
         
@@ -126,7 +126,7 @@ if __name__ == "__main__":
             except Exception as e:
                 logger.error(f'error occurred while evaluating one-shot ner: \n{e}')
         else:
-            logger.info(f'pass evaluating one-shot ner...')
+            logger.info(f'pass evaluating one-shot ner...\n')
         # zero-shot ner
         if os.path.exists(os.path.join(output_dir, zero_basic_path, 'ner')):
             logger.info('evaluate zero-shot ner output')
@@ -136,7 +136,7 @@ if __name__ == "__main__":
             except Exception as e:
                 logger.error(f'error occurred while evaluting zero-shot ner: \n{e}')
         else:
-            logger.info(f'pass evaluating zero-shot ner output')
+            logger.info(f'pass evaluating zero-shot ner output...\n')
             
         # one-shot re
         if os.path.exists(os.path.join(output_dir, one_basic_path, 're')):
@@ -147,7 +147,7 @@ if __name__ == "__main__":
             except Exception as e:
                 logger.error(f'error occurred while evaluating one-shot tre: \n{e}')
         else:
-            logger.info(f'pass evaluating one-shot tre')
+            logger.info(f'pass evaluating one-shot tre...\n')
         # zero-shot re
         if os.path.exists(os.path.join(output_dir, zero_basic_path, 're')):
             logger.info('evaluate zero-shot tre output')
@@ -157,7 +157,7 @@ if __name__ == "__main__":
             except Exception as e:
                 logger.error(f'error occurred while evaluating zero-shot tre: \n{e}')
         else:
-            logger.info(f'pass evaluating zero-shot tre output')
+            logger.info(f'pass evaluating zero-shot tre output...\n')
         
         # one-shot ner-re
         if os.path.exists(os.path.join(output_dir, one_basic_path, 'nerre')):
@@ -168,7 +168,7 @@ if __name__ == "__main__":
             except Exception as e:
                 logger.error(f'error occurred while evaluating one-shot ner-re: \n{e}')
         else:
-            logger.info(f'pass evaluating one-shot ner')
+            logger.info(f'pass evaluating one-shot ner...\n')
         # zero-shot ner
         if os.path.exists(os.path.join(output_dir, zero_basic_path, 'ner')):
             logger.info('evaluate zero-shot ner-re output')
@@ -178,7 +178,7 @@ if __name__ == "__main__":
             except Exception as e:
                 logger.error(f'error occurred while evaluting zero-shot ner-re: \n{e}')
         else:
-            logger.info(f'pass evaluating zero-shot ner-re output')
+            logger.info(f'pass evaluating zero-shot ner-re output...\n')
         
         # Normalize temporal information into structured format
         

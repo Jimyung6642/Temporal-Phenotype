@@ -160,8 +160,8 @@ def generate_eval_data(input_dir, output_dir):
         
         # Iterating through the target_tlink list and creating XML sub-elements
         root2 = ET.Element("TAGS")
-        for item in target_events:
-            events = ET.SubElement(root2, 'EVENT', item)
+        # for item in target_events:
+        #     events = ET.SubElement(root2, 'EVENT', item)
         # Creating the XML tree with the root2 element
         tree = ET.ElementTree(root2)
         rough_string = ET.tostring(tree.getroot(), 'utf-8')

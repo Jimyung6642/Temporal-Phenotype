@@ -106,7 +106,7 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
             # Append by whoel corpus
             df_output_list.append(pd.DataFrame(output_rows_by_note))
         except Exception as e:
-            logging.error(f'Error merging output files for evaluation: \n{e}\n')
+            logging.error(f'Error merging output files for evaluation: \n{e}')
             logging.error(f'Error occurred file: {output}')
         
     df_original = pd.concat(df_original_list, ignore_index = True)
@@ -129,7 +129,7 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
     logging.info(f'Overall exact match micro metrics...')
     logging.info(f'exact match micro-precission: {round(micro_precision, 3)}')
     logging.info(f'exact match micro-recall: {round(micro_recall, 3)}')
-    logging.info(f'exact match micro-f1: {round(micro_f1, 3)}')
+    logging.info(f'exact match micro-f1: {round(micro_f1, 3)}\n')
 
     # Define a function to check for an exact match across all fields
     def is_exact_match(row, df_to_compare, type):
@@ -171,7 +171,7 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
         logging.info(f'Exact macro relation type: {t}...')
         logging.info(f'exact match macro precision: {round(precision_t, 3)}')
         logging.info(f'exact match macro recall: {round(recall_t, 3)}')
-        logging.info(f'exact match macro f1-score: {round(f1_t, 3)}')
+        logging.info(f'exact match macro f1-score: {round(f1_t, 3)}\n')
 
     # Calculate the macro-averaged metrics
     macro_precision = sum(macro_precision_list) / len(macro_precision_list)
@@ -181,7 +181,7 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
     logging.info(f'Overall exact macro performance...')
     logging.info(f'exact match macro precision: {round(macro_precision, 3)}')
     logging.info(f'exact match macro recall: {round(macro_recall, 3)}')
-    logging.info(f'exact match macro f1-score: {round(macro_f1, 3)}')
+    logging.info(f'exact match macro f1-score: {round(macro_f1, 3)}\n')
     
     ## Relax match
     # macro metrics
@@ -233,7 +233,7 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
     logging.info(f'Overall relax match micro metrics...')
     logging.info(f'relax match micro-precission: {round(relax_micro_precision, 3)}')
     logging.info(f'relax match micro-recall: {round(relax_micro_recall, 3)}')
-    logging.info(f'relax match micro-f1: {round(relax_micro_f1, 3)}')
+    logging.info(f'relax match micro-f1: {round(relax_micro_f1, 3)}\n')
     
     # Define a function to check for a relaxed match
     def is_relaxed_micro_match(gold_row, model_row):
@@ -288,7 +288,7 @@ def eval_ner(output_dir: str, execute_date: str, few_shot: bool = True):
     logging.info(f"Overall relax macro performance...")
     logging.info(f"relax match macro precision: {round(relax_macro_precision, 3)}")
     logging.info(f"relax match macro recall: {round(relax_macro_recall, 3)}")
-    logging.info(f"relax match macro f1-score: {round(relax_macro_f1, 3)}")
+    logging.info(f"relax match macro f1-score: {round(relax_macro_f1, 3)}\n")
     
     return merged_df
 
@@ -409,7 +409,7 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
     logging.info(f'================================')
     logging.info(f'micro-precission: {round(micro_precision, 3)}')
     logging.info(f'micro-recall: {round(micro_recall, 3)}')
-    logging.info(f'micro-f1: {round(micro_f1, 3)}')
+    logging.info(f'micro-f1: {round(micro_f1, 3)}\n')
 
     # For macro-average, we need to calculate metrics for each 'type' and then average them
     types = df_original['type'].unique().tolist() + df_output['type'].unique().tolist()
@@ -434,7 +434,7 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
             logging.info(f'Relation type: {t}...')
             logging.info(f'macro precision: {round(precision_t, 3)}...')
             logging.info(f'macro recall: {round(recall_t, 3)}...')
-            logging.info(f'macro f1-score: {round(f1_t, 3)}')
+            logging.info(f'macro f1-score: {round(f1_t, 3)}\n')
         else:
             logging.info(f'pass type: {t} for not having TP')
 
@@ -445,7 +445,7 @@ def eval_re(output_dir, execute_date = None, few_shot: bool = True):
     logging.info(f'Overall macro performance...')
     logging.info(f'macro precision: {round(macro_precision, 3)}')
     logging.info(f'macro recall: {round(macro_recall, 3)}')
-    logging.info(f'macro f1: {(round(macro_f1, 3))}')
+    logging.info(f'macro f1: {(round(macro_f1, 3))}\n')
     return merged_df
     
 def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
@@ -574,7 +574,7 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
     logging.info(f'================================')
     logging.info(f'micro-precission: {round(micro_precision, 3)}')
     logging.info(f'micro-recall: {round(micro_recall, 3)}')
-    logging.info(f'micro-f1: {round(micro_f1, 3)}')
+    logging.info(f'micro-f1: {round(micro_f1, 3)}\n')
 
     # For macro-average, we need to calculate metrics for each 'type' and then average them
     types = df_original['type'].unique().tolist() + df_output['type'].unique().tolist()
@@ -598,7 +598,7 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
         logging.info(f'Relation type: {t}...')
         logging.info(f'macro precision: {round(precision_t, 3)}')
         logging.info(f'macro recall: {round(recall_t, 3)}')
-        logging.info(f'macro f1-score: {round(f1_t, 3)}')
+        logging.info(f'macro f1-score: {round(f1_t, 3)}\n')
 
     macro_precision = sum(macro_precision_list) / len(macro_precision_list)
     macro_recall = sum(macro_recall_list) / len(macro_recall_list)
@@ -607,6 +607,6 @@ def eval_nerre(output_dir: str, execute_date = None, few_shot: bool = True):
     logging.info(f'Overall macro performance...')
     logging.info(f'macro precision: {round(macro_precision, 3)}')
     logging.info(f'macro recall: {round(macro_recall, 3)}')
-    logging.info(f'macro f1: {round(macro_f1, 3)}')
+    logging.info(f'macro f1: {round(macro_f1, 3)}\n')
     
     return merged_df

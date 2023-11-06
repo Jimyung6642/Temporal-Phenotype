@@ -69,8 +69,8 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
-                        logging.info(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}")
+                        logging.info(f"susepnding 30 secs to avoid max retries...\n")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -86,7 +86,7 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding='utf-8') as f:
                         f.write(response)
                 else: 
-                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file due to empty response...\n")
                     
     else: # zero_shot
         system_msg = config['NER']['zero_prompt']
@@ -116,8 +116,8 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
-                        logging.info(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}")
+                        logging.info(f"susepnding 30 secs to avoid max retries...\n")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -132,7 +132,7 @@ def run_ner(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding = 'utf-8') as f:
                         f.write(response)
                 else: 
-                    logging.ingo(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.ingo(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file due to empty response...\n")
     
 
 def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
@@ -194,8 +194,8 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
-                        logging.info(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}")
+                        logging.info(f"susepnding 30 secs to avoid max retries...\n")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -211,7 +211,7 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding='utf-8') as f:
                         f.write(response)
                 else: 
-                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file due to empty response...\n")
         
     else:
         system_msg = config['RE']['zero_prompt']
@@ -242,8 +242,8 @@ def run_re(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
-                        logging.info(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}")
+                        logging.info(f"susepnding 30 secs to avoid max retries...\n")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -319,8 +319,8 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
-                        logging.info(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}")
+                        logging.info(f"susepnding 30 secs to avoid max retries...\n")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -336,7 +336,7 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding = 'utf-8') as f:
                         f.write(response)
                 else: 
-                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file due to empty response...\n")
     
     else:
         system_msg = config['NERRE']['zero_prompt']
@@ -366,8 +366,8 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                         response = completions.choices[0]['message']['content']
                         break
                     except Exception as e:
-                        logging.error(f"{note}: {api_no}th API error: \n{e}\n")
-                        logging.info(f"susepnding 30 secs to avoid max retries...")
+                        logging.error(f"{note}: {api_no}th API error: \n{e}")
+                        logging.info(f"susepnding 30 secs to avoid max retries...\n")
                         time.sleep(30)
                         api_no += 1
                         response = ''
@@ -382,4 +382,4 @@ def run_nerre(output_dir: str, few_shot: bool = True, api_retry: int = 6):
                     with open(output_file, 'w', encoding='utf-8') as f:
                         f.write(response)
                 else: 
-                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file...")
+                    logging.info(f"pass saving {os.path.splitext(os.path.basename(note))[0]} file due to empty response...\n")
