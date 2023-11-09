@@ -62,14 +62,18 @@ if __name__ == "__main__":
         logger.info('start API request')
         logger.info('============================================================')        
         try:
+            logger.info(f'============================================================')
             logger.info(f'start one-shot ner...')
+            logger.info(f'============================================================')
             run_ner(output_dir, few_shot = True, api_retry=6)
             logger.info(f'done one-shot ner\n')
         except Exception as e:
             logger.info(f'error occurred while running few-shot ner: {e}')
         # zero shot
         try:
+            logger.info(f'============================================================')
             logger.info(f'start zero-shot ner...')
+            logger.info(f'============================================================')
             run_ner(output_dir, few_shot = False, api_retry=6)
             logger.info(f'done zero-shot ner\n')
         except Exception as e:
@@ -77,14 +81,18 @@ if __name__ == "__main__":
         ## tRE
         # few shot
         try:
-            logger.info(f'start one-shot tre...')
+            logger.info(f'============================================================')
+            logger.info(f'start one-shot re...')
+            logger.info(f'============================================================')
             run_re(output_dir, few_shot = True, api_retry=6)
             logger.info(f'done one-shot tre\n')
         except Exception as e:
             logger.info(f'error occurred while running one-shot tre: {e}')
         # zero shot
         try:
-            logger.info(f'start zero-shot tre...')
+            logger.info(f'============================================================')
+            logger.info(f'start zero-shot re...')
+            logger.info(f'============================================================')
             run_re(output_dir, few_shot = False, api_retry=6)
             logger.info(f'done zero-shot tre\n')
         except Exception as e:
@@ -92,14 +100,18 @@ if __name__ == "__main__":
         ## NER-RE
         # few shot
         try:
+            logger.info(f'============================================================')
             logger.info(f'start one-shot ner-re...')
+            logger.info(f'============================================================')
             run_nerre(output_dir, few_shot = True, api_retry=6)
             logger.info(f'done one-shot ner-re\n')
         except Exception as e:
             logger.info(f'error occurred while running one-shot ner-re: {e}')
         # zero shot
         try:
+            logger.info(f'============================================================')
             logger.info(f'start zero-shot ner-re...')
+            logger.info(f'============================================================')
             run_nerre(output_dir, few_shot = False, api_retry=6)
             logger.info(f'done zero-shot ner-re\n')
         except Exception as e:
@@ -119,7 +131,9 @@ if __name__ == "__main__":
         
         # one-shot ner
         if os.path.exists(os.path.join(output_dir, one_basic_path, 'ner')):
+            logger.info(f'============================================================')
             logger.info('evaluate one-shot ner output...')
+            logger.info(f'============================================================')
             try:
                 eval_df = eval_ner(output_dir, few_shot=True, execute_date = None)   
                 eval_df.to_csv(os.path.join(output_dir, one_basic_path, 'ner_one_df.csv'), index=False)
@@ -129,7 +143,9 @@ if __name__ == "__main__":
             logger.info(f'pass evaluating one-shot ner...\n')
         # zero-shot ner
         if os.path.exists(os.path.join(output_dir, zero_basic_path, 'ner')):
+            logger.info(f'============================================================')
             logger.info('evaluate zero-shot ner output')
+            logger.info(f'============================================================')
             try:
                 eval_df = eval_ner(output_dir, few_shot=False, execute_date = None)
                 eval_df.to_csv(os.path.join(output_dir, zero_basic_path, 'ner_zero_df.csv'), index=False)
@@ -140,7 +156,9 @@ if __name__ == "__main__":
             
         # one-shot re
         if os.path.exists(os.path.join(output_dir, one_basic_path, 're')):
+            logger.info(f'============================================================')
             logger.info('evaluate one-shot tre output')
+            logger.info(f'============================================================')
             try:
                 eval_df = eval_re(output_dir, few_shot=True, execute_date = '231027')
                 eval_df.to_csv(os.path.join(output_dir, one_basic_path, 're_one_df.csv'), index=False)
@@ -150,7 +168,9 @@ if __name__ == "__main__":
             logger.info(f'pass evaluating one-shot tre...\n')
         # zero-shot re
         if os.path.exists(os.path.join(output_dir, zero_basic_path, 're')):
+            logger.info(f'============================================================')
             logger.info('evaluate zero-shot tre output')
+            logger.info(f'============================================================')
             try:
                 eval_df = eval_re(output_dir, few_shot=False, execute_date = None)
                 eval_df.to_csv(os.path.join(output_dir, one_basic_path, 're_zero_df.csv'), index=False)
@@ -161,7 +181,9 @@ if __name__ == "__main__":
         
         # one-shot ner-re
         if os.path.exists(os.path.join(output_dir, one_basic_path, 'nerre')):
+            logger.info(f'============================================================')
             logger.info('evaluate one-shot ner-re output')
+            logger.info(f'============================================================')
             try:
                 eval_df = eval_nerre(output_dir, few_shot=True, execute_date = None)
                 eval_df.to_csv(os.path.join(output_dir, one_basic_path, 'nerre_one_df.csv'), index=False)
@@ -171,7 +193,9 @@ if __name__ == "__main__":
             logger.info(f'pass evaluating one-shot ner...\n')
         # zero-shot ner
         if os.path.exists(os.path.join(output_dir, zero_basic_path, 'ner')):
+            logger.info(f'============================================================')
             logger.info('evaluate zero-shot ner-re output')
+            logger.info(f'============================================================')
             try:
                 eval_df = eval_nerre(output_dir, few_shot=False, execute_date = None)
                 eval_df.to_csv(os.path.join(output_dir, one_basic_path, 'nerre_one_df.csv'), index=False)
