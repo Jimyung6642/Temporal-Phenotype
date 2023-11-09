@@ -1,10 +1,13 @@
 import pandas as pd
 import tqdm as td
+import networkx as nx
+from networkx.algorithms.dag import topological_sort
 
 import xml.etree.ElementTree as ET
 
+import matplotlib.pyplot as plt
 import glob, os, logging
-import re
+import re as reg
 import configparser
 from datetime import date
 
@@ -41,6 +44,10 @@ def normalize(output_dir: str, execute_date: str, few_shot: bool = True):
     ner_files = glob.glob(os.path.join(ner, "*.xml"))
     re_files = glob.glob(os.path.join(re, "*.xml"))
     
+    # ## For devel purpose, use eval files
+    # ner_files = glob.glob('./result/eval/ner/*.xml')
+    # re_files = glob.glob('./result/eval/re/*.xml')
+    
     # process by individual file
     ner_df = []
     re_df = []
@@ -58,19 +65,24 @@ def normalize(output_dir: str, execute_date: str, few_shot: bool = True):
             ner_output = '\n'.join(lines)
             # Remove complete lines
             pattern = r'<EVENT[^>]*\/>'
-            matches = re.findall(pattern, ner_output)
+            matches = reg.findall(pattern, ner_output)
             ner_output = '<TAGS>\n' + '\n'.join(matches) + '\n</TAGS>'
             
-            # parse xml
+            # parse xml            
             root = ET.fromstring(ner_output)
             ner_note = []
             for event in root.findall('EVENT'):
+                # Standardize time text to normalized value
+                if any(type_attr in event.get("type") for type_attr in ['DATE', 'DURATION', 'FREQUENCY', 'TIME']):
+                    event.set("text", event.get("val"))  # Replace text with val                
+                    
                 ner_note.append({
                     'noteID': os.path.splitext(os.path.basename(ner))[0],
+                    'id': event.attrib['id'],
                     'text': event.attrib['text'],
                     'type': event.attrib['type']
                 })
-        ner_df.append(pd.DataFrame(ner_note))
+            ner_df.append(pd.DataFrame(ner_note))
     except Exception as e:
         logging.error(f'Error occured while parsing ner_xml file: \n{e}')
     
@@ -87,16 +99,16 @@ def normalize(output_dir: str, execute_date: str, few_shot: bool = True):
             lines = [line for line in lines if all(keyword in line for keyword in ('toText', 'fromText', 'type'))]
             re_output = '\n'.join(lines)
             # Remove xml tags in text snippet
-            re_output = re.sub(r'(<EVENT.*?/EVENT>)|(<TIMEX.*?/TIMEX>)|(<EVENT|<TIMEX|</EVENT>|</TIMEX>)', '', re_output)
+            re_output = reg.sub(r'(<EVENT.*?/EVENT>)|(<TIMEX.*?/TIMEX>)|(<EVENT|<TIMEX|</EVENT>|</TIMEX>)', '', re_output)
             # Remove complete lines
             pattern = r'<TLINK[^>]*\/>'
-            matches = re.findall(pattern, re_output)
+            matches = reg.findall(pattern, re_output)
             re_output = '<TAGS>\n' + '\n'.join(matches) + '\n</TAGS>'
             
             # parse xml
             root = ET.fromstring(re_output)
             re_note = []
-            for tlink in root.findall('EVENT'):
+            for tlink in root.findall('TLINK'):
                 re_note.append({
                     'noteID': os.path.splitext(os.path.basename(re))[0],
                     'fromID': tlink.get('fromID'),
@@ -105,13 +117,34 @@ def normalize(output_dir: str, execute_date: str, few_shot: bool = True):
                     'toText': tlink.get('toText'),
                     'type': tlink.attrib['type']
                 })
-        re_df.append(pd.DataFrame(re_note))
+            re_df.append(pd.DataFrame(re_note))
     except Exception as e:
         logging.error(f'Error occured while parsing re_xml file: \n{e}')
         
-        
+    ner_df = pd.concat(ner_df, ignore_index=True)
+    re_df = pd.concat(re_df, ignore_index=True)
     
-    df_corpus = pd.concat(df, ignore_index=True)
+    # Replace temporal expression in re_df using ner_df
+    id_text_map = pd.Series(ner_df.text.values, index=ner_df.id).to_dict()
+    re_df['fromText'] = re_df['fromID'].map(id_text_map)
+    re_df['toText'] = re_df['toID'].map(id_text_map)
     
-    
-    
+    # Extract Time entities from ner_df
+    absolute_temp = ner_df[ner_df['type'].isin(['DATE','TIME'])]
+    relative_temp = ner_df[ner_df['type'].isin(['DURATION','FREQUENCY'])]
+    event = ner_df[ner_df['type'].isin(['TEST','TREATMENT','PROBLEM'])]
+       
+    # Identify DATE entity set as baseline temp
+    date = ner_df[ner_df['type'] =='DATE']    
+    tmp_re = re_df[re_df['noteID']=='298']
+            
+    ### Identify potential temporal expression from re_df, use DATE as baseline
+    ## Process absolute temp relation
+    # EVENT to TIME
+    # TIME to EVENT
+    # EVENT to EVENT
+    ## Process relative temp relation
+    # EVENT to TIME
+    # TIME to EVENT
+    # EVENT to EVENT
+    ## Caculate date range of the events
