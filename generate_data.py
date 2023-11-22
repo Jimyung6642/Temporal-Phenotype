@@ -152,16 +152,18 @@ def generate_eval_data(input_dir, output_dir):
         for event in root.findall(".//EVENT"):
             event_modality = event.attrib.get('modality', '')
             event_polarity = event.attrib.get('polarity', '')
-            event_type = event.attrib.get('type', '').lower()  # converting type to lowercase for comparison
-            if event_modality == 'FACTUAL' and event_polarity == 'POS' and event_type in ['problem', 'treatment', 'test', 'occurrence']:
+            event_type = event.attrib.get('type', '')
+            if event_modality == 'FACTUAL' and event_polarity == 'POS' and event_type in ['PROBLEM', 'TREATMENT', 'TEST', 'OCCURRENCE']:
                 target_events.append(event.attrib)
         for timex in root.findall(".//TIMEX3"):
             target_events.append(timex.attrib)
         
         # Iterating through the target_tlink list and creating XML sub-elements
         root2 = ET.Element("TAGS")
-        # for item in target_events:
-        #     events = ET.SubElement(root2, 'EVENT', item)
+        
+        for item in target_events:
+            ET.SubElement(root2, 'EVENT', item)
+            
         # Creating the XML tree with the root2 element
         tree = ET.ElementTree(root2)
         rough_string = ET.tostring(tree.getroot(), 'utf-8')
@@ -216,7 +218,7 @@ def generate_eval_data(input_dir, output_dir):
         
         # Iterating through the target_tlink list and creating XML sub-elements
         for item in target_tlink:
-            tlink = ET.SubElement(root2, 'TLINK', item)
+            ET.SubElement(root2, 'TLINK', item)
         
         # Creating the XML tree with the root2 element
         tree = ET.ElementTree(root2)
@@ -275,7 +277,7 @@ def generate_eval_data(input_dir, output_dir):
         
         # Iterating through the target_tlink list and creating XML sub-elements
         for item in target:
-            tlink = ET.SubElement(root2, 'EVENT', item)
+            ET.SubElement(root2, 'EVENT', item)
         
         # Creating the XML tree with the root2 element
         tree = ET.ElementTree(root2)
