@@ -93,7 +93,7 @@ def generate_input_data(input_dir, output_dir):
             event_modality = event.attrib.get('modality', '')
             event_polarity = event.attrib.get('polarity', '')
             event_type = event.attrib.get('type', '').lower()  # converting type to lowercase for comparison
-            if event_modality == 'FACTUAL' and event_polarity == 'POS' and event_type in ['problem', 'treatment', 'test']:
+            if event_modality == 'FACTUAL' and event_polarity == 'POS' and event_type in ['problem', 'treatment', 'test', 'occurrence']:
                 annotations.append((int(event.attrib['start']), int(event.attrib['end']), f'<EVENT id:"{event.attrib["id"]}" type:"{event.attrib["type"]}">', f'</EVENT>'))
         for timex in root.findall(".//TIMEX3"):
             annotations.append((int(timex.attrib['start']), int(timex.attrib['end']), f'<TIMEX3 id:"{timex.attrib["id"]}" type:"{timex.attrib["type"]}" val:"{timex.attrib["val"]}">', f'</TIMEX3>'))
@@ -153,7 +153,7 @@ def generate_eval_data(input_dir, output_dir):
             event_modality = event.attrib.get('modality', '')
             event_polarity = event.attrib.get('polarity', '')
             event_type = event.attrib.get('type', '').lower()  # converting type to lowercase for comparison
-            if event_modality == 'FACTUAL' and event_polarity == 'POS' and event_type in ['problem', 'treatment', 'test']:
+            if event_modality == 'FACTUAL' and event_polarity == 'POS' and event_type in ['problem', 'treatment', 'test', 'occurrence']:
                 target_events.append(event.attrib)
         for timex in root.findall(".//TIMEX3"):
             target_events.append(timex.attrib)
@@ -190,7 +190,7 @@ def generate_eval_data(input_dir, output_dir):
             event_modality = event.attrib.get('modality', '')
             event_polarity = event.attrib.get('polarity', '')
             event_type = event.attrib.get('type', '').lower()  # converting type to lowercase for comparison
-            if event_modality == 'FACTUAL' and event_polarity == 'POS' and event_type in ['problem', 'treatment', 'test']:
+            if event_modality == 'FACTUAL' and event_polarity == 'POS' and event_type in ['problem', 'treatment', 'test', 'occurrence']:
                 target_events.append(event.attrib['id'])
         for timex in root.findall(".//TIMEX3"):
             target_events.append(timex.attrib['id'])
@@ -248,7 +248,7 @@ def generate_eval_data(input_dir, output_dir):
             event_modality = event.attrib.get('modality', '')
             event_polarity = event.attrib.get('polarity', '')
             event_type = event.attrib.get('type', '').lower()  # converting type to lowercase for comparison
-            if event_modality == 'FACTUAL' and event_polarity == 'POS' and event_type in ['problem', 'treatment', 'test']:
+            if event_modality == 'FACTUAL' and event_polarity == 'POS' and event_type in ['problem', 'treatment', 'test', 'occurrence']:
                 target.append(event.attrib)
                 target_list.append(event.attrib['id'])
         for timex in root.findall(".//TIMEX3"):
