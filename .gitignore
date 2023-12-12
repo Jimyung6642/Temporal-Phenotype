@@ -1,7 +1,7 @@
 # data
 i2b2-2012-original/*
 result/*
-api.config
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
